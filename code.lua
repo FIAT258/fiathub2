@@ -73,33 +73,82 @@ local KillerESP = {Enabled=false, Cache={}}
 local SurvivorESP = {Enabled=false, Cache={}}
 
 ------------------------------------------------
--- INFINITE STAMINA (LOGICA ATUALIZADA – SEGURA)
+-- INFINITE STAMINA (LOGICA NOVA – SPRINTING MODULE)
 ------------------------------------------------
 local InfiniteStamina = false
-local staminaConn
 
 local function enableInfiniteStamina()
-    if staminaConn then staminaConn:Disconnect() end
-    staminaConn = RunService.Heartbeat:Connect(function()
-        local char = LocalPlayer.Character
-        if not char then return end
+    local sprintingModule = require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting)
 
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            pcall(function()
-                hum:SetAttribute("Stamina", 100)
-                hum:SetAttribute("MaxStamina", 100)
-            end)
+    local originalStaminaChange = sprintingModule.ChangeStat
+    sprintingModule.ChangeStat = function(self, stat, value)
+        if stat == "Stamina" then
+            return
         end
-    end)
+        return originalStaminaChange(self, stat, value)
+    end
+
+    local originalInit = sprintingModule.Init
+    sprintingModule.Init = function(self)
+        originalInit(self)
+
+        self.StaminaLossDisabled = true
+        self.Stamina = self.MaxStamina
+
+        local staminaLoop
+        staminaLoop = game:GetService("RunService").Heartbeat:Connect(function()
+            if self.Stamina < self.MaxStamina then
+                self.Stamina = self.MaxStamina
+                if self.__staminaChangedEvent then
+                    self.__staminaChangedEvent:Fire(self.MaxStamina)
+                end
+            end
+        end)
+
+        self._infiniteStaminaLoop = staminaLoop
+    end
+
+    if sprintingModule.DefaultsSet then
+        sprintingModule.StaminaLossDisabled = true
+        sprintingModule.Stamina = sprintingModule.MaxStamina
+
+        if not sprintingModule._infiniteStaminaLoop then
+            local staminaLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                if sprintingModule.Stamina < sprintingModule.MaxStamina then
+                    sprintingModule.Stamina = sprintingModule.MaxStamina
+                    if sprintingModule.__staminaChangedEvent then
+                        sprintingModule.__staminaChangedEvent:Fire(sprintingModule.MaxStamina)
+                    end
+                end
+            end)
+            sprintingModule._infiniteStaminaLoop = staminaLoop
+        end
+    end
+
+    _G.InfiniteStaminaData = {
+        OriginalChangeStat = originalStaminaChange,
+        OriginalInit = originalInit,
+        Module = sprintingModule
+    }
 end
 
 local function disableInfiniteStamina()
-    if staminaConn then
-        staminaConn:Disconnect()
-        staminaConn = nil
+    if _G.InfiniteStaminaData then
+        local sprintingModule = _G.InfiniteStaminaData.Module
+
+        sprintingModule.ChangeStat = _G.InfiniteStaminaData.OriginalChangeStat
+        sprintingModule.Init = _G.InfiniteStaminaData.OriginalInit
+        sprintingModule.StaminaLossDisabled = false
+
+        if sprintingModule._infiniteStaminaLoop then
+            sprintingModule._infiniteStaminaLoop:Disconnect()
+            sprintingModule._infiniteStaminaLoop = nil
+        end
+
+        _G.InfiniteStaminaData = nil
     end
 end
+
 
 ------------------------------------------------
 -- ITEM ESP (ORIGINAL)
