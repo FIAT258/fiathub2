@@ -67,20 +67,19 @@ end
 local AutoChance = {Enabled=false, Radius=90, Cooldown=false}
 local AutoBlock  = {Enabled=false, Radius=1.5}
 local PlayerSpeed = {Enabled=false, Speed=16}
-local AutoGen = {Enabled=false, Cooldown=1.2, Last=0}
+local AutoGen = {Enabled=false, Cooldown=3.9, Last=0}
 
 local KillerESP = {Enabled=false, Cache={}}
 local SurvivorESP = {Enabled=false, Cache={}}
 
 ------------------------------------------------
--- INFINITE STAMINA (ATUALIZADO – SEGURO)
+-- INFINITE STAMINA (LOGICA ATUALIZADA – SEGURA)
 ------------------------------------------------
 local InfiniteStamina = false
 local staminaConn
 
 local function enableInfiniteStamina()
     if staminaConn then staminaConn:Disconnect() end
-
     staminaConn = RunService.Heartbeat:Connect(function()
         local char = LocalPlayer.Character
         if not char then return end
@@ -164,12 +163,61 @@ local function clearItemESP()
 end
 
 ------------------------------------------------
--- AUTO CHANCE / AUTO BLOCK (ORIGINAIS)
+-- AUTO CHANCE (ORIGINAL)
 ------------------------------------------------
--- (inalterados)
+local function runAutoChance()
+    if AutoChance.Cooldown then return end
+    local myHRP = getHRP(LocalPlayer.Character)
+    if not myHRP then return end
+
+    for _,m in pairs(workspace:GetDescendants()) do
+        if isKiller(m) then
+            local hrp = getHRP(m)
+            if hrp and dist(myHRP, hrp) <= AutoChance.Radius then
+                AutoChance.Cooldown = true
+                pressKey(Enum.KeyCode.LeftControl)
+
+                local cam
+                cam = RunService.RenderStepped:Connect(function()
+                    if not AutoChance.Enabled then cam:Disconnect() end
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, hrp.Position)
+                end)
+
+                task.wait(0.2)
+                pressKey(Enum.KeyCode.E)
+                task.wait(1)
+                if cam then cam:Disconnect() end
+
+                task.delay(45,function()
+                    AutoChance.Cooldown = false
+                end)
+                break
+            end
+        end
+    end
+end
 
 ------------------------------------------------
--- AUTO GENERATOR (ATUALIZADO – REAL)
+-- AUTO BLOCK (ORIGINAL)
+------------------------------------------------
+local function runAutoBlock()
+    local myHRP = getHRP(LocalPlayer.Character)
+    if not myHRP then return end
+
+    for _,p in pairs(workspace:GetDescendants()) do
+        if p:IsA("BasePart") and p.Name:lower():find("hit") then
+            if dist(myHRP, p) <= AutoBlock.Radius then
+                pressKey(Enum.KeyCode.Q)
+                task.wait(0.7)
+                pressKey(Enum.KeyCode.R)
+                break
+            end
+        end
+    end
+end
+
+------------------------------------------------
+-- AUTO GENERATOR (LOGICA ATUALIZADA – REAL)
 ------------------------------------------------
 local function runAutoGen()
     if not AutoGen.Enabled then return end
@@ -177,7 +225,9 @@ local function runAutoGen()
     AutoGen.Last = tick()
 
     for _,obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") and obj.Parent and obj.Parent.Name:lower():find("generator") then
+        if obj:IsA("ProximityPrompt")
+        and obj.Parent
+        and obj.Parent.Name:lower():find("generator") then
             pcall(function()
                 fireproximityprompt(obj)
             end)
@@ -186,6 +236,106 @@ local function runAutoGen()
 end
 
 ------------------------------------------------
--- RESTO DO SCRIPT
+-- ESP HELPERS
 ------------------------------------------------
--- 🔒 TODO O RESTO PERMANECE EXATAMENTE IGUAL AO SEU
+local function applyESP(model,color,cache)
+    if cache[model] then return end
+    local h = Instance.new("Highlight")
+    h.FillColor = color
+    h.OutlineColor = color
+    h.Adornee = model
+    h.Parent = model
+    cache[model] = h
+end
+
+local function clearESP(cache)
+    for _,h in pairs(cache) do
+        pcall(function() h:Destroy() end)
+    end
+    table.clear(cache)
+end
+
+------------------------------------------------
+-- MAIN LOOP
+------------------------------------------------
+RunService.Heartbeat:Connect(function()
+    if AutoChance.Enabled then runAutoChance() end
+    if AutoBlock.Enabled then runAutoBlock() end
+    if AutoGen.Enabled then runAutoGen() end
+
+    if PlayerSpeed.Enabled then
+        local h = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if h then h.WalkSpeed = PlayerSpeed.Speed end
+    end
+
+    if KillerESP.Enabled then
+        for _,m in pairs(workspace:GetDescendants()) do
+            if isKiller(m) then
+                applyESP(m, Color3.fromRGB(255,0,0), KillerESP.Cache)
+            end
+        end
+    end
+
+    if SurvivorESP.Enabled then
+        for _,p in pairs(Players:GetPlayers()) do
+            if p.Character and not isKiller(p.Character) then
+                applyESP(p.Character, Color3.fromRGB(0,255,0), SurvivorESP.Cache)
+            end
+        end
+    end
+
+    if ItemESP.Enabled then
+        for _,m in pairs(workspace:GetDescendants()) do
+            if isItem(m) then
+                addItemESP(m)
+            end
+        end
+    end
+end)
+
+------------------------------------------------
+-- LIGHT
+------------------------------------------------
+local orig = {Lighting.Brightness, Lighting.ClockTime}
+local function lightOn()
+    Lighting.Brightness = 5
+    Lighting.ClockTime = 14
+end
+local function lightOff()
+    Lighting.Brightness = orig[1]
+    Lighting.ClockTime = orig[2]
+end
+
+------------------------------------------------
+-- UI (NADA SEPARADO)
+------------------------------------------------
+Tab:CreateToggle({Name="Aim Bot Chance",Callback=function(v) AutoChance.Enabled=v end})
+Tab:CreateToggle({Name="Auto Block",Callback=function(v) AutoBlock.Enabled=v end})
+Tab:CreateToggle({Name="Auto Generator",Callback=function(v) AutoGen.Enabled=v end})
+
+Tab:CreateToggle({
+    Name="Infinite Stamina",
+    Callback=function(v)
+        InfiniteStamina = v
+        if v then enableInfiniteStamina() else disableInfiniteStamina() end
+    end
+})
+
+Tab:CreateToggle({Name="ESP Killer",Callback=function(v) KillerESP.Enabled=v if not v then clearESP(KillerESP.Cache) end end})
+Tab:CreateToggle({Name="ESP Sobreviventes",Callback=function(v) SurvivorESP.Enabled=v if not v then clearESP(SurvivorESP.Cache) end end})
+Tab:CreateToggle({Name="ESP Itens",Callback=function(v) ItemESP.Enabled=v if not v then clearItemESP() end end})
+Tab:CreateToggle({Name="Luz",Callback=function(v) if v then lightOn() else lightOff() end end})
+
+Tab:CreateSlider({
+    Name="Player Speed",
+    Range={0,100},
+    CurrentValue=16,
+    Callback=function(v) PlayerSpeed.Speed=v end
+})
+
+Tab:CreateToggle({
+    Name="Ativar Speed",
+    Callback=function(v) PlayerSpeed.Enabled=v end
+})
+
+Rayfield:LoadConfiguration()
