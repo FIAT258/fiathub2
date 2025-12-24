@@ -266,23 +266,50 @@ local function runAutoBlock()
 end
 
 ------------------------------------------------
--- AUTO GENERATOR (LOGICA ATUALIZADA – REAL)
+-- AUTO GENERATOR (LOGICA NOVA – REAL / PUZZLE)
 ------------------------------------------------
 local function runAutoGen()
     if not AutoGen.Enabled then return end
     if tick() - AutoGen.Last < AutoGen.Cooldown then return end
     AutoGen.Last = tick()
 
-    for _,obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt")
-        and obj.Parent
-        and obj.Parent.Name:lower():find("generator") then
-            pcall(function()
-                fireproximityprompt(obj)
-            end)
+    local IngameMapFolder = workspace:FindFirstChild("Map")
+        and workspace.Map:FindFirstChild("Ingame")
+
+    local SubMapFolder = IngameMapFolder
+        and IngameMapFolder:FindFirstChild("Map")
+
+    if not SubMapFolder then return end
+
+    for _,generator in ipairs(SubMapFolder:GetChildren()) do
+        if generator.Name == "Generator" then
+            local progress = generator:FindFirstChild("Progress")
+
+            if progress
+            and progress:IsA("NumberValue")
+            and progress.Value < 100 then
+
+                local success = pcall(function()
+                    generator.Remotes.RE:FireServer()
+                end)
+
+                if success then
+                    local maxWaitTime = 10
+                    local startTime = tick()
+
+                    while tick() - startTime < maxWaitTime do
+                        task.wait(0.1)
+
+                        if ForceCompletePuzzle and ForceCompletePuzzle() then
+                            return
+                        end
+                    end
+                end
+            end
         end
     end
 end
+
 
 ------------------------------------------------
 -- ESP HELPERS
