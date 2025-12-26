@@ -298,7 +298,7 @@ local function runAutoGen()
                     local startTime = tick()
 
                     while tick() - startTime < maxWaitTime do
-                        task.wait(0.1)
+                        task.wait(3)
 
                         if ForceCompletePuzzle and ForceCompletePuzzle() then
                             return
