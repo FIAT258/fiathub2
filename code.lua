@@ -415,3 +415,67 @@ Tab:CreateToggle({
 })
 
 Rayfield:LoadConfiguration()
+
+
+local RunService = game:GetService("RunService")
+local GingerbreadESP = false
+local InvisibleESP = false
+
+RunService.Heartbeat:Connect(function()
+    -- 🔵 GINGERBREAD ESP
+    if GingerbreadESP then
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Name == "Gingerbread" then
+                if not obj:FindFirstChild("GingerbreadOutline") then
+                    local outline = Instance.new("SelectionBox")
+                    outline.Name = "GingerbreadOutline"
+                    outline.Adornee = obj
+                    outline.Color3 = Color3.fromRGB(100,200,255)
+                    outline.Transparency = 0.3
+                    outline.LineThickness = 0.1
+                    outline.Parent = obj
+                end
+            end
+        end
+    else
+        -- limpa quando desliga
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                local o = obj:FindFirstChild("GingerbreadOutline")
+                if o then o:Destroy() end
+            end
+        end
+    end
+
+    -- 👻 INVISIBLE ESP (E R Q)
+    if InvisibleESP then
+        keypress(Enum.KeyCode.E)
+        keyrelease(Enum.KeyCode.E)
+
+        keypress(Enum.KeyCode.R)
+        keyrelease(Enum.KeyCode.R)
+
+        keypress(Enum.KeyCode.Q)
+        keyrelease(Enum.KeyCode.Q)
+    end
+end)
+
+local EventsTab = Window:CreateTab("EVENTS", 4483362458)
+
+EventsTab:CreateToggle({
+    Name = "Gingerbread ESP",
+    CurrentValue = false,
+    Callback = function(v)
+        GingerbreadESP = v
+    end
+})
+
+local OpTab = Window:CreateTab("OP", 4483362458)
+
+OpTab:CreateToggle({
+    Name = "Invisible ESP",
+    CurrentValue = false,
+    Callback = function(v)
+        InvisibleESP = v
+    end
+})
