@@ -479,3 +479,83 @@ OpTab:CreateToggle({
         InvisibleESP = v
     end
 })
+
+
+EventsTab:CreateButton({
+    Name = "Tween Generator",
+    Callback = function()
+        tweenToNearestGenerator()
+    end
+})
+
+------------------------------------------------
+-- FORCE JUMP BUTTON (MOBILE)
+------------------------------------------------
+local ForceJump = false
+
+local function enableForceJump()
+    pcall(function()
+        LocalPlayer.PlayerGui:SetTopbarTransparency(0)
+        UserSettings():GetService("UserGameSettings").TouchJumpEnabled = true
+    end)
+end
+
+local function disableForceJump()
+    pcall(function()
+        UserSettings():GetService("UserGameSettings").TouchJumpEnabled = false
+    end)
+end
+
+
+OpTab:CreateToggle({
+    Name = "Força Pulo",
+    Callback = function(v)
+        ForceJump = v
+        if v then
+            enableForceJump()
+        else
+            disableForceJump()
+        end
+    end
+})
+
+------------------------------------------------
+-- INVISIBLE ESP COUNTER
+------------------------------------------------
+local InvisibleESP = {
+    Enabled = false,
+    Cooldown = false
+}
+
+local function pressSequence()
+    pressKey(Enum.KeyCode.E)
+    task.wait(0.15)
+    pressKey(Enum.KeyCode.R)
+    task.wait(0.15)
+    pressKey(Enum.KeyCode.Q)
+end
+
+
+if InvisibleESP.Enabled and not InvisibleESP.Cooldown then
+    for _,obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Highlight") or obj:IsA("SelectionBox") then
+            InvisibleESP.Cooldown = true
+            pressSequence()
+
+            task.delay(1.2, function()
+                InvisibleESP.Cooldown = false
+            end)
+            break
+        end
+    end
+end
+
+
+
+OpTab:CreateToggle({
+    Name = "Invisible ESP",
+    Callback = function(v)
+        InvisibleESP.Enabled = v
+    end
+})
+end
