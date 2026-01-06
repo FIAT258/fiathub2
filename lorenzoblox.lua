@@ -1,6 +1,6 @@
 local Update = (loadstring(game:HttpGet("https://roblox.relzscript.xyz/source/relzhub/library/pc.lua")))();
 local Alert = (loadstring(game:HttpGet("https://roblox.relzscript.xyz/source/relzhub/library/alert.lua")))();
-local Library = Update:Window("Blox Fruits");
+local Library = Update:Window("FIAT HUB (Blox Fruits)");
 local MainTab = Library:Tab("Main", "rbxassetid://10723407389");
 local SettingsTab = Library:Tab("Setting", "rbxassetid://10734950309");
 local HoldTab = Library:Tab("Hold Skill", "rbxassetid://10734984606");
