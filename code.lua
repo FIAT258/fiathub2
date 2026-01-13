@@ -18,7 +18,7 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
-local Tab = Window:CreateTab("MAIN", 4483362458)
+local Tab = Window:CreateTab("MAIN", 6862780938)
 
 ------------------------------------------------
 -- SERVICES
