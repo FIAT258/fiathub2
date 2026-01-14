@@ -6,7 +6,7 @@
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "FIAT HUB (BETA)",
+    Name = "FIAT HUB (pobre haven)",
     LoadingTitle = "FIAT HUB",
     LoadingSubtitle = "by fiat",
     ConfigurationSaving = { Enabled = false },
@@ -24,7 +24,7 @@ local LocalPlayer = Players.LocalPlayer
 -- TABs
 ------------------------------------------------
 local BetaTab   = Window:CreateTab("BETA", 6862780938)
-local ConfigTab = Window:CreateTab("CONFIG", 6862780938)
+local ConfigTab = Window:CreateTab("CONFIG", 9632115853)
 
 ------------------------------------------------
 -- STATES
