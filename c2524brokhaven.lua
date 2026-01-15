@@ -6,12 +6,12 @@
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "FIAT HUB (brokhaven pobre)",
+    Name = "FIAT HUB (BETA)",
     Icon = 0,
-    LoadingTitle = "carregando seu beta",
+    LoadingTitle = "FIAT HUB",
     LoadingSubtitle = "by fiat",
     ShowText = "FIAT",
-    Theme = "Ocean", -- <<<<<< TEMA (MUDE SE QUISER)
+    Theme = "Ocean",
 
     ToggleUIKeybind = "K",
 
@@ -38,13 +38,15 @@ local Window = Rayfield:CreateWindow({
 ------------------------------------------------
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 ------------------------------------------------
 -- TABs
 ------------------------------------------------
-local BetaTab   = Window:CreateTab("troll", 6862780938)
-local ConfigTab = Window:CreateTab("CONFIG", 9632115853)
+local BetaTab   = Window:CreateTab("BETA", 6862780938)
+local ConfigTab = Window:CreateTab("CONFIG", 6862780938)
 
 ------------------------------------------------
 -- STATES
@@ -54,7 +56,7 @@ local ESPPlayer = false
 local ESP_CACHE = {}
 
 ------------------------------------------------
--- PLAYER LIST (DROPDOWN DINÂMICO)
+-- PLAYER LIST (DROPDOWN)
 ------------------------------------------------
 local function getPlayerNames()
     local list = {}
@@ -122,7 +124,74 @@ local function clearESP()
 end
 
 ------------------------------------------------
--- BETA TOGGLES (SEM LÓGICA)
+-- ESPECTER PLAYER (LÓGICA)
+------------------------------------------------
+local SpectateEnabled = false
+local SpectateConnection
+
+local OriginalCameraType
+local OriginalCameraSubject
+local OriginalCFrame
+
+local function getPlayerByName(name)
+    for _,p in pairs(Players:GetPlayers()) do
+        if p.Name == name then
+            return p
+        end
+    end
+end
+
+local function getHRP(character)
+    return character and character:FindFirstChild("HumanoidRootPart")
+end
+
+local function EnableSpectate()
+    if SpectateEnabled then return end
+    if not SelectedPlayer then return end
+
+    local targetPlayer = getPlayerByName(SelectedPlayer)
+    if not targetPlayer or not targetPlayer.Character then return end
+
+    local hrp = getHRP(targetPlayer.Character)
+    if not hrp then return end
+
+    SpectateEnabled = true
+
+    OriginalCameraType = Camera.CameraType
+    OriginalCameraSubject = Camera.CameraSubject
+    OriginalCFrame = Camera.CFrame
+
+    Camera.CameraType = Enum.CameraType.Scriptable
+
+    SpectateConnection = RunService.RenderStepped:Connect(function()
+        if not SpectateEnabled then return end
+        if not targetPlayer.Character then return end
+
+        local targetHRP = getHRP(targetPlayer.Character)
+        if targetHRP then
+            Camera.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 8)
+        end
+    end)
+end
+
+local function DisableSpectate()
+    if not SpectateEnabled then return end
+    SpectateEnabled = false
+
+    if SpectateConnection then
+        SpectateConnection:Disconnect()
+        SpectateConnection = nil
+    end
+
+    Camera.CameraType = OriginalCameraType or Enum.CameraType.Custom
+    Camera.CameraSubject = OriginalCameraSubject
+    if OriginalCFrame then
+        Camera.CFrame = OriginalCFrame
+    end
+end
+
+------------------------------------------------
+-- BETA TOGGLES
 ------------------------------------------------
 BetaTab:CreateToggle({
     Name="Fling",
@@ -141,102 +210,11 @@ BetaTab:CreateToggle({
 BetaTab:CreateToggle({
     Name="Especter",
     Callback=function(v)
-        ------------------------------------------------
--- SERVICES
-------------------------------------------------
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Camera = workspace.CurrentCamera
-local LocalPlayer = Players.LocalPlayer
-
-------------------------------------------------
--- STATE
-------------------------------------------------
-local SpectateEnabled = false
-local SpectateConnection = nil
-
-local OriginalCameraType = nil
-local OriginalCameraSubject = nil
-local OriginalCFrame = nil
-
--- SelectedPlayer deve conter O NOME do player
--- Exemplo: SelectedPlayer = "Player123"
-
-------------------------------------------------
--- HELPERS
-------------------------------------------------
-local function getPlayerByName(name)
-    for _,p in pairs(Players:GetPlayers()) do
-        if p.Name == name then
-            return p
+        if v then
+            EnableSpectate()
+        else
+            DisableSpectate()
         end
-    end
-end
-
-local function getHumanoidRootPart(character)
-    return character and character:FindFirstChild("HumanoidRootPart")
-end
-
-------------------------------------------------
--- ENABLE ESPECTER
-------------------------------------------------
-local function EnableSpectate()
-    if SpectateEnabled then return end
-    if not SelectedPlayer then return end
-
-    local targetPlayer = getPlayerByName(SelectedPlayer)
-    if not targetPlayer or not targetPlayer.Character then return end
-
-    local hrp = getHumanoidRootPart(targetPlayer.Character)
-    if not hrp then return end
-
-    SpectateEnabled = true
-
-    -- salvar estado original da câmera
-    OriginalCameraType = Camera.CameraType
-    OriginalCameraSubject = Camera.CameraSubject
-    OriginalCFrame = Camera.CFrame
-
-    Camera.CameraType = Enum.CameraType.Scriptable
-
-    SpectateConnection = RunService.RenderStepped:Connect(function()
-        if not SpectateEnabled then return end
-        if not targetPlayer.Character then return end
-
-        local targetHRP = getHumanoidRootPart(targetPlayer.Character)
-        if targetHRP then
-            -- câmera atrás e um pouco acima do player
-            Camera.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 8)
-        end
-    end)
-end
-
-------------------------------------------------
--- DISABLE ESPECTER
-------------------------------------------------
-local function DisableSpectate()
-    if not SpectateEnabled then return end
-    SpectateEnabled = false
-
-    if SpectateConnection then
-        SpectateConnection:Disconnect()
-        SpectateConnection = nil
-    end
-
-    -- restaurar câmera
-    Camera.CameraType = OriginalCameraType or Enum.CameraType.Custom
-    Camera.CameraSubject = OriginalCameraSubject
-    if OriginalCFrame then
-        Camera.CFrame = OriginalCFrame
-    end
-end
-
-------------------------------------------------
--- USO
-------------------------------------------------
--- EnableSpectate()  -- ligar especter
--- DisableSpectate() -- desligar especter
-            
     end
 })
 
@@ -297,6 +275,7 @@ ConfigTab:CreateButton({
     Name="Delete Interface",
     Callback=function()
         clearESP()
+        DisableSpectate()
         Rayfield:Destroy()
     end
 })
