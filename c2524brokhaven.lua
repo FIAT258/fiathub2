@@ -6,9 +6,9 @@
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "FIAT HUB (BETA)",
+    Name = "FIAT HUB (brokhaven pobre)",
     Icon = 0,
-    LoadingTitle = "FIAT HUB",
+    LoadingTitle = "carregando seu beta",
     LoadingSubtitle = "by fiat",
     ShowText = "FIAT",
     Theme = "Ocean", -- <<<<<< TEMA (MUDE SE QUISER)
@@ -43,7 +43,7 @@ local LocalPlayer = Players.LocalPlayer
 ------------------------------------------------
 -- TABs
 ------------------------------------------------
-local BetaTab   = Window:CreateTab("BETA", 6862780938)
+local BetaTab   = Window:CreateTab("troll", 6862780938)
 local ConfigTab = Window:CreateTab("CONFIG", 9632115853)
 
 ------------------------------------------------
