@@ -12,22 +12,12 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by fiat",
     ShowText = "FIAT",
     Theme = "Ocean",
-
     ToggleUIKeybind = "K",
-
-    DisableRayfieldPrompts = false,
-    DisableBuildWarnings = false,
 
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "FIAT_HUB",
         FileName = "Config"
-    },
-
-    Discord = {
-        Enabled = false,
-        Invite = "noinvitelink",
-        RememberJoins = true
     },
 
     KeySystem = false
@@ -43,7 +33,7 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 ------------------------------------------------
--- TABs
+-- TABS
 ------------------------------------------------
 local BetaTab   = Window:CreateTab("BETA", 6862780938)
 local ConfigTab = Window:CreateTab("CONFIG", 6862780938)
@@ -56,7 +46,7 @@ local ESPPlayer = false
 local ESP_CACHE = {}
 
 ------------------------------------------------
--- PLAYER LIST (DROPDOWN)
+-- PLAYER LIST (DROPDOWN CORRIGIDO)
 ------------------------------------------------
 local function getPlayerNames()
     local list = {}
@@ -71,9 +61,13 @@ end
 local PlayerDropdown = BetaTab:CreateDropdown({
     Name = "Select Player",
     Options = getPlayerNames(),
-    CurrentOption = nil,
+    CurrentOption = {},
     Callback = function(v)
-        SelectedPlayer = v
+        if typeof(v) == "table" then
+            SelectedPlayer = v[1]
+        else
+            SelectedPlayer = v
+        end
     end
 })
 
@@ -88,8 +82,7 @@ Players.PlayerRemoving:Connect(refreshDropdown)
 -- ESP PLAYER (BRANCO + NOME)
 ------------------------------------------------
 local function addESP(player)
-    if ESP_CACHE[player] then return end
-    if not player.Character then return end
+    if ESP_CACHE[player] or not player.Character then return end
 
     local highlight = Instance.new("Highlight")
     highlight.FillColor = Color3.fromRGB(255,255,255)
@@ -116,47 +109,34 @@ end
 
 local function clearESP()
     for _,v in pairs(ESP_CACHE) do
-        for _,obj in pairs(v) do
-            pcall(function() obj:Destroy() end)
+        for _,o in pairs(v) do
+            pcall(function() o:Destroy() end)
         end
     end
     table.clear(ESP_CACHE)
 end
 
 ------------------------------------------------
--- ESPECTER PLAYER (LÓGICA)
+-- ESPECTER PLAYER (FUNCIONANDO)
 ------------------------------------------------
 local SpectateEnabled = false
 local SpectateConnection
-
 local OriginalCameraType
 local OriginalCameraSubject
 local OriginalCFrame
 
 local function getPlayerByName(name)
     for _,p in pairs(Players:GetPlayers()) do
-        if p.Name == name then
-            return p
-        end
+        if p.Name == name then return p end
     end
 end
 
-local function getHRP(character)
-    return character and character:FindFirstChild("HumanoidRootPart")
-end
-
 local function EnableSpectate()
-    if SpectateEnabled then return end
-    if not SelectedPlayer then return end
-
+    if SpectateEnabled or not SelectedPlayer then return end
     local targetPlayer = getPlayerByName(SelectedPlayer)
-    if not targetPlayer or not targetPlayer.Character then return end
-
-    local hrp = getHRP(targetPlayer.Character)
-    if not hrp then return end
+    if not targetPlayer then return end
 
     SpectateEnabled = true
-
     OriginalCameraType = Camera.CameraType
     OriginalCameraSubject = Camera.CameraSubject
     OriginalCFrame = Camera.CFrame
@@ -165,72 +145,36 @@ local function EnableSpectate()
 
     SpectateConnection = RunService.RenderStepped:Connect(function()
         if not SpectateEnabled then return end
-        if not targetPlayer.Character then return end
-
-        local targetHRP = getHRP(targetPlayer.Character)
-        if targetHRP then
-            Camera.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 8)
+        if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            Camera.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,3,8)
         end
     end)
 end
 
 local function DisableSpectate()
-    if not SpectateEnabled then return end
     SpectateEnabled = false
-
-    if SpectateConnection then
-        SpectateConnection:Disconnect()
-        SpectateConnection = nil
-    end
+    if SpectateConnection then SpectateConnection:Disconnect() end
 
     Camera.CameraType = OriginalCameraType or Enum.CameraType.Custom
-    Camera.CameraSubject = OriginalCameraSubject
-    if OriginalCFrame then
-        Camera.CFrame = OriginalCFrame
-    end
+    Camera.CameraSubject = OriginalCameraSubject or LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if OriginalCFrame then Camera.CFrame = OriginalCFrame end
 end
 
 ------------------------------------------------
 -- BETA TOGGLES
 ------------------------------------------------
-BetaTab:CreateToggle({
-    Name="Fling",
-    Callback=function(v)
-        -----?
-    end
-})
-
-BetaTab:CreateToggle({
-    Name="Lag Player",
-    Callback=function(v)
-        -----?
-    end
-})
+BetaTab:CreateToggle({Name="Fling",Callback=function(v) -----? end})
+BetaTab:CreateToggle({Name="Lag Player",Callback=function(v) -----? end})
 
 BetaTab:CreateToggle({
     Name="Especter",
     Callback=function(v)
-        if v then
-            EnableSpectate()
-        else
-            DisableSpectate()
-        end
+        if v then EnableSpectate() else DisableSpectate() end
     end
 })
 
-BetaTab:CreateToggle({
-    Name="Fling Canoa",
-    Callback=function(v)
-        -----?
-    end
-})
-
-BetaTab:CreateToggle({
-    Name="Fling Ball",
-    Callback=function(v)
-        -----?
-    end
-})
+BetaTab:CreateToggle({Name="Fling Canoa",Callback=function(v) -----? end})
+BetaTab:CreateToggle({Name="Fling Ball",Callback=function(v) -----? end})
 
 ------------------------------------------------
 -- CONFIG
@@ -245,12 +189,28 @@ ConfigTab:CreateToggle({
     end
 })
 
+------------------------------------------------
+-- ANTI SIT (FORTE)
+------------------------------------------------
+local AntiSit = false
+local AntiSitConn
+
 ConfigTab:CreateToggle({
     Name="Anti Sit",
     Callback=function(v)
-        if v and LocalPlayer.Character then
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hum.Sit = false end
+        AntiSit = v
+        if v then
+            AntiSitConn = RunService.Heartbeat:Connect(function()
+                local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.Sit = false
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                end
+            end)
+        else
+            if AntiSitConn then AntiSitConn:Disconnect() end
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true) end
         end
     end
 })
@@ -259,14 +219,9 @@ ConfigTab:CreateToggle({
     Name="ESP Player",
     Callback=function(v)
         ESPPlayer = v
-        if not v then
-            clearESP()
-        else
-            for _,p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer then
-                    addESP(p)
-                end
-            end
+        if not v then clearESP() end
+        for _,p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and v then addESP(p) end
         end
     end
 })
@@ -285,10 +240,8 @@ ConfigTab:CreateButton({
 ------------------------------------------------
 Players.PlayerAdded:Connect(function(p)
     if ESPPlayer then
-        p.CharacterAdded:Connect(function()
-            task.wait(1)
-            addESP(p)
-        end)
+        p.CharacterAdded:Wait()
+        addESP(p)
     end
 end)
 
