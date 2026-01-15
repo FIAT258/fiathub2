@@ -1,4 +1,4 @@
--- FIAT HUB – INTERFACE LIMPA (BETA)
+-- FIAT HUB – INTERFACE LIMPA (BETA) | RAYFIELD ATUAL
 
 ------------------------------------------------
 -- RAYFIELD
@@ -6,10 +6,30 @@
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "FIAT HUB (pobre haven)",
+    Name = "FIAT HUB (BETA)",
+    Icon = 0,
     LoadingTitle = "FIAT HUB",
     LoadingSubtitle = "by fiat",
-    ConfigurationSaving = { Enabled = false },
+    ShowText = "FIAT",
+    Theme = "Ocean", -- <<<<<< TEMA (MUDE SE QUISER)
+
+    ToggleUIKeybind = "K",
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "FIAT_HUB",
+        FileName = "Config"
+    },
+
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+
     KeySystem = false
 })
 
@@ -197,3 +217,5 @@ Players.PlayerAdded:Connect(function(p)
         end)
     end
 end)
+
+Rayfield:LoadConfiguration()
