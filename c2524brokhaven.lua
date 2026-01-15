@@ -1,5 +1,3 @@
--- FIAT HUB – INTERFACE LIMPA (BETA) | RAYFIELD ATUAL
-
 ------------------------------------------------
 -- RAYFIELD
 ------------------------------------------------
@@ -12,24 +10,19 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by fiat",
     ShowText = "FIAT",
     Theme = "Ocean",
-
     ToggleUIKeybind = "K",
-
     DisableRayfieldPrompts = false,
     DisableBuildWarnings = false,
-
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "FIAT_HUB",
         FileName = "Config"
     },
-
     Discord = {
         Enabled = false,
         Invite = "noinvitelink",
         RememberJoins = true
     },
-
     KeySystem = false
 })
 
@@ -43,7 +36,7 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 ------------------------------------------------
--- TABs
+-- TABS
 ------------------------------------------------
 local BetaTab   = Window:CreateTab("BETA", 6862780938)
 local ConfigTab = Window:CreateTab("CONFIG", 6862780938)
@@ -60,7 +53,7 @@ local ESP_CACHE = {}
 ------------------------------------------------
 local function getPlayerNames()
     local list = {}
-    for _, p in pairs(Players:GetPlayers()) do
+    for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             table.insert(list, p.Name)
         end
@@ -85,15 +78,14 @@ Players.PlayerAdded:Connect(refreshDropdown)
 Players.PlayerRemoving:Connect(refreshDropdown)
 
 ------------------------------------------------
--- ESP PLAYER (BRANCO + NOME)
+-- ESP PLAYER
 ------------------------------------------------
 local function addESP(player)
-    if ESP_CACHE[player] then return end
-    if not player.Character then return end
+    if ESP_CACHE[player] or not player.Character then return end
 
     local highlight = Instance.new("Highlight")
-    highlight.FillColor = Color3.fromRGB(255,255,255)
-    highlight.OutlineColor = Color3.fromRGB(255,255,255)
+    highlight.FillColor = Color3.new(1,1,1)
+    highlight.OutlineColor = Color3.new(1,1,1)
     highlight.Parent = player.Character
 
     local billboard = Instance.new("BillboardGui")
@@ -115,81 +107,53 @@ local function addESP(player)
 end
 
 local function clearESP()
-    for _, v in pairs(ESP_CACHE) do
-        for _, obj in pairs(v) do
-            pcall(function()
-                obj:Destroy()
-            end)
+    for _, objs in pairs(ESP_CACHE) do
+        for _, obj in pairs(objs) do
+            pcall(function() obj:Destroy() end)
         end
     end
     table.clear(ESP_CACHE)
 end
 
 ------------------------------------------------
--- ESPECTER PLAYER (LÓGICA)
+-- ESPECTER PLAYER (100% FUNCIONAL)
 ------------------------------------------------
 local SpectateEnabled = false
 local SpectateConnection
-
-local OriginalCameraType
 local OriginalCameraSubject
-local OriginalCFrame
+local OriginalCameraType
 
-local function getPlayerByName(name)
-    for _, p in pairs(Players:GetPlayers()) do
-        if p.Name == name then
+local function getTarget()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name == SelectedPlayer then
             return p
         end
     end
 end
 
-local function getHRP(character)
-    return character and character:FindFirstChild("HumanoidRootPart")
-end
-
 local function EnableSpectate()
-    if SpectateEnabled then return end
-    if not SelectedPlayer then return end
+    if SpectateEnabled or not SelectedPlayer then return end
 
-    local targetPlayer = getPlayerByName(SelectedPlayer)
-    if not targetPlayer or not targetPlayer.Character then return end
+    local target = getTarget()
+    if not target or not target.Character then return end
 
-    local hrp = getHRP(targetPlayer.Character)
-    if not hrp then return end
+    local hum = target.Character:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
 
     SpectateEnabled = true
-
-    OriginalCameraType = Camera.CameraType
     OriginalCameraSubject = Camera.CameraSubject
-    OriginalCFrame = Camera.CFrame
+    OriginalCameraType = Camera.CameraType
 
-    Camera.CameraType = Enum.CameraType.Scriptable
-
-    SpectateConnection = RunService.RenderStepped:Connect(function()
-        if not SpectateEnabled then return end
-        if not targetPlayer.Character then return end
-
-        local targetHRP = getHRP(targetPlayer.Character)
-        if targetHRP then
-            Camera.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 8)
-        end
-    end)
+    Camera.CameraType = Enum.CameraType.Custom
+    Camera.CameraSubject = hum
 end
 
 local function DisableSpectate()
     if not SpectateEnabled then return end
     SpectateEnabled = false
 
-    if SpectateConnection then
-        SpectateConnection:Disconnect()
-        SpectateConnection = nil
-    end
-
     Camera.CameraType = OriginalCameraType or Enum.CameraType.Custom
-    Camera.CameraSubject = OriginalCameraSubject
-    if OriginalCFrame then
-        Camera.CFrame = OriginalCFrame
-    end
+    Camera.CameraSubject = OriginalCameraSubject or LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 end
 
 ------------------------------------------------
@@ -210,7 +174,7 @@ BetaTab:CreateToggle({
 })
 
 BetaTab:CreateToggle({
-    Name = "Especter",
+    Name = "Especter Player",
     Callback = function(v)
         if v then
             EnableSpectate()
@@ -242,20 +206,6 @@ BetaTab:CreateToggle({
 })
 
 BetaTab:CreateToggle({
-    Name = "TP Player",
-    Callback = function(v)
-        -----?
-    end
-})
-
-BetaTab:CreateToggle({
-    Name = "Kill Player",
-    Callback = function(v)
-        -----?
-    end
-})
-
-BetaTab:CreateToggle({
     Name = "Bring Player",
     Callback = function(v)
         -----?
@@ -276,13 +226,13 @@ ConfigTab:CreateToggle({
 })
 
 ConfigTab:CreateToggle({
-    Name = "Anti Sit",
+    Name = "Anti Sit (FORTE)",
     Callback = function(v)
-        if v and LocalPlayer.Character then
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.Sit = false
-            end
+        if v then
+            RunService.Stepped:Connect(function()
+                local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then hum.Sit = false end
+            end)
         end
     end
 })
@@ -294,7 +244,7 @@ ConfigTab:CreateToggle({
         if not v then
             clearESP()
         else
-            for _, p in pairs(Players:GetPlayers()) do
+            for _, p in ipairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer then
                     addESP(p)
                 end
@@ -313,18 +263,14 @@ ConfigTab:CreateButton({
 })
 
 ------------------------------------------------
--- ESP AUTO UPDATE
+-- AUTO ESP
 ------------------------------------------------
 Players.PlayerAdded:Connect(function(p)
     if ESPPlayer then
-        p.CharacterAdded:Connect(function()
-            task.wait(1)
-            addESP(p)
-        end)
+        p.CharacterAdded:Wait()
+        task.wait(1)
+        addESP(p)
     end
 end)
 
-------------------------------------------------
--- FINAL
-------------------------------------------------
 Rayfield:LoadConfiguration()
