@@ -1,9 +1,13 @@
--- NOTHING UI
-local NothingLibrary = loadstring(game:HttpGetAsync(
-    'https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'
+------------------------------------------------
+-- LOAD NOTHING UI
+------------------------------------------------
+local NothingLibrary = loadstring(game:HttpGet(
+	"https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua"
 ))()
 
+------------------------------------------------
 -- SERVICES
+------------------------------------------------
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -11,46 +15,54 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-local Humanoid = Character:WaitForChild("Humanoid")
-
--- ATUALIZA CHAR
-LocalPlayer.CharacterAdded:Connect(function(char)
-	Character = char
-	HumanoidRootPart = char:WaitForChild("HumanoidRootPart")
-	Humanoid = char:WaitForChild("Humanoid")
-end)
 
 ------------------------------------------------
 -- WINDOW
 ------------------------------------------------
 local Window = NothingLibrary.new({
-	Title = "FIAT HUB (murderr mysty)",
-	Description = "FIAT HUB aura+ego",
+	Title = "NOTHING",
+	Description = "Auto Farms / Troll / Config",
 	Keybind = Enum.KeyCode.LeftControl,
 	Logo = "http://www.roblox.com/asset/?id=18898582662"
 })
 
 ------------------------------------------------
--- FUNÇÕES ÚTEIS
+-- UTILS
 ------------------------------------------------
+local function getChar()
+	return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function getHRP()
+	return getChar():WaitForChild("HumanoidRootPart")
+end
+
+local function getHum()
+	return getChar():WaitForChild("Humanoid")
+end
+
+local noclipConnection
 local function setNoclip(state)
-	RunService.Stepped:Connect(function()
-		if state and Character then
-			for _,v in pairs(Character:GetDescendants()) do
+	if noclipConnection then
+		noclipConnection:Disconnect()
+		noclipConnection = nil
+	end
+	if state then
+		noclipConnection = RunService.Stepped:Connect(function()
+			for _,v in pairs(getChar():GetDescendants()) do
 				if v:IsA("BasePart") then
 					v.CanCollide = false
 				end
 			end
-		end
-	end)
+		end)
+	end
 end
 
 local function tweenTo(cf, speed)
-	local dist = (HumanoidRootPart.Position - cf.Position).Magnitude
+	local hrp = getHRP()
+	local dist = (hrp.Position - cf.Position).Magnitude
 	local tween = TweenService:Create(
-		HumanoidRootPart,
+		hrp,
 		TweenInfo.new(dist / speed, Enum.EasingStyle.Linear),
 		{CFrame = cf}
 	)
@@ -59,65 +71,60 @@ local function tweenTo(cf, speed)
 end
 
 ------------------------------------------------
--- ABA FARM PRINCIPAL
+-- FARM PRINCIPAL
 ------------------------------------------------
 local FarmTab = Window:NewTab({
 	Title = "Farm principal",
 	Icon = "rbxassetid://7733960981"
 })
 
-local FarmSection = FarmTab:NewSection({
+local FarmLeft = FarmTab:NewSection({
 	Title = "Auto Farms",
 	Position = "Left"
 })
 
-local InfoSection = FarmTab:NewSection({
+local FarmRight = FarmTab:NewSection({
 	Title = "Informação",
 	Position = "Right"
 })
 
-InfoSection:NewLabel({
-	Text = "auto farms em beta ative só um"
+FarmRight:NewParagraph({
+	Title = "Aviso",
+	Description = "auto farms em beta ative só um"
 })
 
 ------------------------------------------------
 -- AUTO FARM COINS
 ------------------------------------------------
-local AutoFarmCoins = false
-local coinTween
-
-FarmSection:NewToggle({
+local farmCoins = false
+FarmLeft:NewToggle({
 	Title = "auto farm coins",
 	Default = false,
-	Callback = function(state)
-		AutoFarmCoins = state
-		setNoclip(state)
+	Callback = function(v)
+		farmCoins = v
+		setNoclip(v)
 
 		task.spawn(function()
-			while AutoFarmCoins do
-				local closest
-				local dist = math.huge
-
-				for _,v in pairs(ReplicatedStorage:GetDescendants()) do
-					if v:IsA("BasePart") and (v.Name:lower():find("coin") or v.Name:lower():find("won")) then
-						local d = (HumanoidRootPart.Position - v.Position).Magnitude
+			while farmCoins do
+				local closest, dist = nil, math.huge
+				for _,obj in pairs(ReplicatedStorage:GetDescendants()) do
+					if obj:IsA("BasePart") and (obj.Name:lower():find("coin") or obj.Name:lower():find("won")) then
+						local d = (getHRP().Position - obj.Position).Magnitude
 						if d < dist then
 							dist = d
-							closest = v
+							closest = obj
 						end
 					end
 				end
 
 				if closest then
-					coinTween = tweenTo(closest.CFrame + Vector3.new(0,3,0), 40)
-					coinTween.Completed:Wait()
+					tweenTo(closest.CFrame + Vector3.new(0,3,0), 40).Completed:Wait()
 					task.wait(2)
 				else
-					tweenTo(CFrame.new(0,-200,0), 40)
+					tweenTo(CFrame.new(0,-150,0), 40)
 					task.wait(2)
 				end
 			end
-			if coinTween then coinTween:Cancel() end
 		end)
 	end
 })
@@ -125,29 +132,22 @@ FarmSection:NewToggle({
 ------------------------------------------------
 -- AUTO FARM MURDER
 ------------------------------------------------
-local AutoFarmMurder = false
-
-FarmSection:NewToggle({
+local farmMurder = false
+FarmLeft:NewToggle({
 	Title = "auto farm muder",
 	Default = false,
-	Callback = function(state)
-		AutoFarmMurder = state
-		setNoclip(state)
+	Callback = function(v)
+		farmMurder = v
+		setNoclip(v)
 
 		task.spawn(function()
-			while AutoFarmMurder do
+			while farmMurder do
 				if LocalPlayer.Team and LocalPlayer.Team.Name == "Murderer" then
-					keypress(0x31) -- tecla 1
 					for _,plr in pairs(Players:GetPlayers()) do
-						if plr ~= LocalPlayer and plr.Team 
-						and (plr.Team.Name == "Sheriff" or plr.Team.Name == "Innocent") then
-							if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-								tweenTo(plr.Character.HumanoidRootPart.CFrame, 60)
-								for i=1,10 do
-									mouse1click()
-									task.wait(0.1)
-								end
-							end
+						if plr ~= LocalPlayer and plr.Team
+						and (plr.Team.Name == "Sheriff" or plr.Team.Name == "Innocent")
+						and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+							tweenTo(plr.Character.HumanoidRootPart.CFrame, 60)
 						end
 					end
 				end
@@ -158,7 +158,7 @@ FarmSection:NewToggle({
 })
 
 ------------------------------------------------
--- ABA TROLL
+-- TROLL
 ------------------------------------------------
 local TrollTab = Window:NewTab({
 	Title = "Troll",
@@ -166,7 +166,7 @@ local TrollTab = Window:NewTab({
 })
 
 local TrollSection = TrollTab:NewSection({
-	Title = "Fling",
+	Title = "Troll",
 	Position = "Left"
 })
 
@@ -176,33 +176,30 @@ TrollSection:NewDropdown({
 	Title = "Selecionar Team",
 	Options = {"Murderer","Sheriff","Innocent"},
 	Default = "Murderer",
-	Callback = function(val)
-		selectedTeam = val
+	Callback = function(v)
+		selectedTeam = v
 	end
 })
 
 ------------------------------------------------
 -- FLING ESPECÍFICO
 ------------------------------------------------
-local FlingSpecific = false
-
+local flingSpecific = false
 TrollSection:NewToggle({
 	Title = "fling player específico",
 	Default = false,
-	Callback = function(state)
-		FlingSpecific = state
-		setNoclip(state)
+	Callback = function(v)
+		flingSpecific = v
+		setNoclip(v)
 
 		task.spawn(function()
-			while FlingSpecific do
+			while flingSpecific do
 				for _,plr in pairs(Players:GetPlayers()) do
-					if plr.Team and plr.Team.Name == selectedTeam and plr.Character then
-						local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-						if hrp then
-							for i=1,20 do
-								HumanoidRootPart.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(i*30), 0)
-								task.wait()
-							end
+					if plr.Team and plr.Team.Name == selectedTeam
+					and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						for i=1,20 do
+							getHRP().CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(i*25), 0)
+							task.wait()
 						end
 					end
 				end
@@ -215,25 +212,21 @@ TrollSection:NewToggle({
 ------------------------------------------------
 -- FLING ALL
 ------------------------------------------------
-local FlingAll = false
-
+local flingAll = false
 TrollSection:NewToggle({
 	Title = "fling all",
 	Default = false,
-	Callback = function(state)
-		FlingAll = state
-		setNoclip(state)
+	Callback = function(v)
+		flingAll = v
+		setNoclip(v)
 
 		task.spawn(function()
-			while FlingAll do
+			while flingAll do
 				for _,plr in pairs(Players:GetPlayers()) do
-					if plr ~= LocalPlayer and plr.Character then
-						local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-						if hrp then
-							for i=1,15 do
-								HumanoidRootPart.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(i*25), 0)
-								task.wait()
-							end
+					if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						for i=1,15 do
+							getHRP().CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(i*30), 0)
+							task.wait()
 						end
 					end
 				end
@@ -244,14 +237,14 @@ TrollSection:NewToggle({
 })
 
 ------------------------------------------------
--- BOTÃO PEGAR GUN
+-- TELEPORT GUN
 ------------------------------------------------
 TrollSection:NewButton({
 	Title = "Teleport Gun",
 	Callback = function()
 		for _,v in pairs(ReplicatedStorage:GetDescendants()) do
 			if v:IsA("BasePart") and v.Name == "Gun" then
-				HumanoidRootPart.CFrame = v.CFrame
+				getHRP().CFrame = v.CFrame
 			end
 		end
 	end
@@ -260,22 +253,21 @@ TrollSection:NewButton({
 ------------------------------------------------
 -- AIMBOT MURDER
 ------------------------------------------------
-local AimBot = false
-
+local aimBot = false
 TrollSection:NewToggle({
 	Title = "aim bot Murderer",
 	Default = false,
-	Callback = function(state)
-		AimBot = state
+	Callback = function(v)
+		aimBot = v
 	end
 })
 
 RunService.RenderStepped:Connect(function()
-	if AimBot then
+	if aimBot then
 		for _,plr in pairs(Players:GetPlayers()) do
 			if plr.Team and plr.Team.Name == "Murderer"
 			and plr.Character and plr.Character:FindFirstChild("Head") then
-				local dist = (HumanoidRootPart.Position - plr.Character.Head.Position).Magnitude
+				local dist = (getHRP().Position - plr.Character.Head.Position).Magnitude
 				if dist <= 110 then
 					workspace.CurrentCamera.CFrame =
 						CFrame.new(workspace.CurrentCamera.CFrame.Position, plr.Character.Head.Position)
@@ -286,7 +278,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 ------------------------------------------------
--- ABA CONFIGURAÇÃO
+-- CONFIGURAÇÃO
 ------------------------------------------------
 local ConfigTab = Window:NewTab({
 	Title = "Configuração",
@@ -294,22 +286,21 @@ local ConfigTab = Window:NewTab({
 })
 
 local ConfigSection = ConfigTab:NewSection({
-	Title = "ESP / Player",
+	Title = "Player / ESP",
 	Position = "Left"
 })
 
 ------------------------------------------------
--- ESP FUNÇÃO
+-- ESP
 ------------------------------------------------
-local function applyESP(teamName, color)
+local function espTeam(teamName, color)
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr.Team and plr.Team.Name == teamName and plr.Character then
-			if not plr.Character:FindFirstChild("ESP") then
-				local h = Instance.new("Highlight", plr.Character)
-				h.Name = "ESP"
-				h.FillColor = color
-				h.OutlineColor = color
-			end
+		if plr.Team and plr.Team.Name == teamName
+		and plr.Character and not plr.Character:FindFirstChild("ESP") then
+			local h = Instance.new("Highlight", plr.Character)
+			h.Name = "ESP"
+			h.FillColor = color
+			h.OutlineColor = color
 		end
 	end
 end
@@ -317,53 +308,52 @@ end
 ConfigSection:NewToggle({
 	Title = "esp Murderer",
 	Callback = function(v)
-		if v then applyESP("Murderer", Color3.fromRGB(255,0,0)) end
+		if v then espTeam("Murderer", Color3.fromRGB(255,0,0)) end
 	end
 })
 
 ConfigSection:NewToggle({
 	Title = "esp sobrevivente",
 	Callback = function(v)
-		if v then applyESP("Innocent", Color3.fromRGB(0,255,0)) end
+		if v then espTeam("Innocent", Color3.fromRGB(0,255,0)) end
 	end
 })
 
 ConfigSection:NewToggle({
 	Title = "esp Sheriff",
 	Callback = function(v)
-		if v then applyESP("Sheriff", Color3.fromRGB(0,0,255)) end
+		if v then espTeam("Sheriff", Color3.fromRGB(0,0,255)) end
 	end
 })
 
 ------------------------------------------------
 -- INFINITE JUMP
 ------------------------------------------------
-local InfJump = false
+local infJump = false
 ConfigSection:NewToggle({
 	Title = "infinit pulo",
 	Callback = function(v)
-		InfJump = v
+		infJump = v
 	end
 })
 
 UserInputService.JumpRequest:Connect(function()
-	if InfJump then
-		Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	if infJump then
+		getHum():ChangeState(Enum.HumanoidStateType.Jumping)
 	end
 end)
 
 ------------------------------------------------
 -- SPEED
 ------------------------------------------------
-local SpeedValue = 16
-
+local speedValue = 16
 ConfigSection:NewSlider({
 	Title = "Velocidade",
 	Min = 16,
 	Max = 100,
 	Default = 16,
 	Callback = function(v)
-		SpeedValue = v
+		speedValue = v
 	end
 })
 
@@ -372,7 +362,7 @@ ConfigSection:NewToggle({
 	Callback = function(v)
 		RunService.Heartbeat:Connect(function()
 			if v then
-				Humanoid.WalkSpeed = SpeedValue
+				getHum().WalkSpeed = speedValue
 			end
 		end)
 	end
@@ -399,6 +389,7 @@ ConfigSection:NewToggle({
 				if g:IsA("BasePart") and g.Name == "Gun" then
 					local h = Instance.new("Highlight", g)
 					h.FillColor = Color3.fromRGB(0,0,255)
+					h.OutlineColor = Color3.fromRGB(0,0,255)
 				end
 			end
 		end
@@ -406,7 +397,7 @@ ConfigSection:NewToggle({
 })
 
 ------------------------------------------------
--- ABA DISCORD
+-- DISCORD
 ------------------------------------------------
 local DiscordTab = Window:NewTab({
 	Title = "Discord",
@@ -418,8 +409,9 @@ local DiscordSection = DiscordTab:NewSection({
 	Position = "Left"
 })
 
-DiscordSection:NewLabel({
-	Text = "script feito por fiat"
+DiscordSection:NewParagraph({
+	Title = "Créditos",
+	Description = "script feito por fiat"
 })
 
 DiscordSection:NewButton({
