@@ -26,8 +26,8 @@ end)
 -- WINDOW
 ------------------------------------------------
 local Window = NothingLibrary.new({
-	Title = "NOTHING",
-	Description = "Auto Farms / Troll / ESP",
+	Title = "FIAT HUB (murderr mysty)",
+	Description = "FIAT HUB aura+ego",
 	Keybind = Enum.KeyCode.LeftControl,
 	Logo = "http://www.roblox.com/asset/?id=18898582662"
 })
