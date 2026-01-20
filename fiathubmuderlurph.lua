@@ -1,9 +1,7 @@
 ------------------------------------------------
--- LOAD NOTHING UI
+-- RAYFIELD UI
 ------------------------------------------------
-local NothingLibrary = loadstring(game:HttpGet(
-	"https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua"
-))()
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 ------------------------------------------------
 -- SERVICES
@@ -19,11 +17,14 @@ local LocalPlayer = Players.LocalPlayer
 ------------------------------------------------
 -- WINDOW
 ------------------------------------------------
-local Window = NothingLibrary.new({
-	Title = "NOTHING",
-	Description = "Auto Farms / Troll / Config",
-	Keybind = Enum.KeyCode.LeftControl,
-	Logo = "http://www.roblox.com/asset/?id=18898582662"
+local Window = Rayfield:CreateWindow({
+	Name = "NOTHING",
+	LoadingTitle = "NOTHING",
+	LoadingSubtitle = "Auto Farms / Troll / Config",
+	ConfigurationSaving = {
+		Enabled = false
+	},
+	KeySystem = false
 })
 
 ------------------------------------------------
@@ -71,35 +72,22 @@ local function tweenTo(cf, speed)
 end
 
 ------------------------------------------------
--- FARM PRINCIPAL
+-- ABA FARM PRINCIPAL
 ------------------------------------------------
-local FarmTab = Window:NewTab({
-	Title = "Farm principal",
-	Icon = "rbxassetid://7733960981"
-})
+local FarmTab = Window:CreateTab("Farm principal", 4483362458)
 
-local FarmLeft = FarmTab:NewSection({
-	Title = "Auto Farms",
-	Position = "Left"
-})
-
-local FarmRight = FarmTab:NewSection({
+FarmTab:CreateParagraph({
 	Title = "Informação",
-	Position = "Right"
-})
-
-FarmRight:NewParagraph({
-	Title = "Aviso",
-	Description = "auto farms em beta ative só um"
+	Content = "auto farms em beta ative só um"
 })
 
 ------------------------------------------------
 -- AUTO FARM COINS
 ------------------------------------------------
 local farmCoins = false
-FarmLeft:NewToggle({
-	Title = "auto farm coins",
-	Default = false,
+FarmTab:CreateToggle({
+	Name = "auto farm coins",
+	CurrentValue = false,
 	Callback = function(v)
 		farmCoins = v
 		setNoclip(v)
@@ -108,7 +96,8 @@ FarmLeft:NewToggle({
 			while farmCoins do
 				local closest, dist = nil, math.huge
 				for _,obj in pairs(ReplicatedStorage:GetDescendants()) do
-					if obj:IsA("BasePart") and (obj.Name:lower():find("coin") or obj.Name:lower():find("won")) then
+					if obj:IsA("BasePart")
+					and (obj.Name:lower():find("coin") or obj.Name:lower():find("won")) then
 						local d = (getHRP().Position - obj.Position).Magnitude
 						if d < dist then
 							dist = d
@@ -133,9 +122,9 @@ FarmLeft:NewToggle({
 -- AUTO FARM MURDER
 ------------------------------------------------
 local farmMurder = false
-FarmLeft:NewToggle({
-	Title = "auto farm muder",
-	Default = false,
+FarmTab:CreateToggle({
+	Name = "auto farm muder",
+	CurrentValue = false,
 	Callback = function(v)
 		farmMurder = v
 		setNoclip(v)
@@ -144,50 +133,44 @@ FarmLeft:NewToggle({
 			while farmMurder do
 				if LocalPlayer.Team and LocalPlayer.Team.Name == "Murderer" then
 					for _,plr in pairs(Players:GetPlayers()) do
-						if plr ~= LocalPlayer and plr.Team
+						if plr ~= LocalPlayer
+						and plr.Team
 						and (plr.Team.Name == "Sheriff" or plr.Team.Name == "Innocent")
-						and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						and plr.Character
+						and plr.Character:FindFirstChild("HumanoidRootPart") then
 							tweenTo(plr.Character.HumanoidRootPart.CFrame, 60)
 						end
 					end
 				end
-				task.wait(0.5)
+				task.wait(0.4)
 			end
 		end)
 	end
 })
 
 ------------------------------------------------
--- TROLL
+-- ABA TROLL
 ------------------------------------------------
-local TrollTab = Window:NewTab({
-	Title = "Troll",
-	Icon = "rbxassetid://7743869054"
-})
-
-local TrollSection = TrollTab:NewSection({
-	Title = "Troll",
-	Position = "Left"
-})
+local TrollTab = Window:CreateTab("Troll", 4483362458)
 
 local selectedTeam = "Murderer"
 
-TrollSection:NewDropdown({
-	Title = "Selecionar Team",
+TrollTab:CreateDropdown({
+	Name = "Selecionar Team",
 	Options = {"Murderer","Sheriff","Innocent"},
-	Default = "Murderer",
+	CurrentOption = "Murderer",
 	Callback = function(v)
 		selectedTeam = v
 	end
 })
 
 ------------------------------------------------
--- FLING ESPECÍFICO
+-- FLING PLAYER ESPECÍFICO
 ------------------------------------------------
 local flingSpecific = false
-TrollSection:NewToggle({
-	Title = "fling player específico",
-	Default = false,
+TrollTab:CreateToggle({
+	Name = "fling player específico",
+	CurrentValue = false,
 	Callback = function(v)
 		flingSpecific = v
 		setNoclip(v)
@@ -195,10 +178,14 @@ TrollSection:NewToggle({
 		task.spawn(function()
 			while flingSpecific do
 				for _,plr in pairs(Players:GetPlayers()) do
-					if plr.Team and plr.Team.Name == selectedTeam
-					and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+					if plr.Team
+					and plr.Team.Name == selectedTeam
+					and plr.Character
+					and plr.Character:FindFirstChild("HumanoidRootPart") then
 						for i=1,20 do
-							getHRP().CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(i*25), 0)
+							getHRP().CFrame =
+								plr.Character.HumanoidRootPart.CFrame *
+								CFrame.Angles(0, math.rad(i*25), 0)
 							task.wait()
 						end
 					end
@@ -213,9 +200,9 @@ TrollSection:NewToggle({
 -- FLING ALL
 ------------------------------------------------
 local flingAll = false
-TrollSection:NewToggle({
-	Title = "fling all",
-	Default = false,
+TrollTab:CreateToggle({
+	Name = "fling all",
+	CurrentValue = false,
 	Callback = function(v)
 		flingAll = v
 		setNoclip(v)
@@ -223,9 +210,13 @@ TrollSection:NewToggle({
 		task.spawn(function()
 			while flingAll do
 				for _,plr in pairs(Players:GetPlayers()) do
-					if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+					if plr ~= LocalPlayer
+					and plr.Character
+					and plr.Character:FindFirstChild("HumanoidRootPart") then
 						for i=1,15 do
-							getHRP().CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(i*30), 0)
+							getHRP().CFrame =
+								plr.Character.HumanoidRootPart.CFrame *
+								CFrame.Angles(0, math.rad(i*30), 0)
 							task.wait()
 						end
 					end
@@ -239,8 +230,8 @@ TrollSection:NewToggle({
 ------------------------------------------------
 -- TELEPORT GUN
 ------------------------------------------------
-TrollSection:NewButton({
-	Title = "Teleport Gun",
+TrollTab:CreateButton({
+	Name = "Teleport Gun",
 	Callback = function()
 		for _,v in pairs(ReplicatedStorage:GetDescendants()) do
 			if v:IsA("BasePart") and v.Name == "Gun" then
@@ -254,9 +245,9 @@ TrollSection:NewButton({
 -- AIMBOT MURDER
 ------------------------------------------------
 local aimBot = false
-TrollSection:NewToggle({
-	Title = "aim bot Murderer",
-	Default = false,
+TrollTab:CreateToggle({
+	Name = "aim bot Murderer",
+	CurrentValue = false,
 	Callback = function(v)
 		aimBot = v
 	end
@@ -265,12 +256,17 @@ TrollSection:NewToggle({
 RunService.RenderStepped:Connect(function()
 	if aimBot then
 		for _,plr in pairs(Players:GetPlayers()) do
-			if plr.Team and plr.Team.Name == "Murderer"
-			and plr.Character and plr.Character:FindFirstChild("Head") then
-				local dist = (getHRP().Position - plr.Character.Head.Position).Magnitude
-				if dist <= 110 then
+			if plr.Team
+			and plr.Team.Name == "Murderer"
+			and plr.Character
+			and plr.Character:FindFirstChild("Head") then
+				local d = (getHRP().Position - plr.Character.Head.Position).Magnitude
+				if d <= 110 then
 					workspace.CurrentCamera.CFrame =
-						CFrame.new(workspace.CurrentCamera.CFrame.Position, plr.Character.Head.Position)
+						CFrame.new(
+							workspace.CurrentCamera.CFrame.Position,
+							plr.Character.Head.Position
+						)
 				end
 			end
 		end
@@ -278,25 +274,19 @@ RunService.RenderStepped:Connect(function()
 end)
 
 ------------------------------------------------
--- CONFIGURAÇÃO
+-- ABA CONFIGURAÇÃO
 ------------------------------------------------
-local ConfigTab = Window:NewTab({
-	Title = "Configuração",
-	Icon = "rbxassetid://7733964719"
-})
-
-local ConfigSection = ConfigTab:NewSection({
-	Title = "Player / ESP",
-	Position = "Left"
-})
+local ConfigTab = Window:CreateTab("Configuração", 4483362458)
 
 ------------------------------------------------
 -- ESP
 ------------------------------------------------
 local function espTeam(teamName, color)
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr.Team and plr.Team.Name == teamName
-		and plr.Character and not plr.Character:FindFirstChild("ESP") then
+		if plr.Team
+		and plr.Team.Name == teamName
+		and plr.Character
+		and not plr.Character:FindFirstChild("ESP") then
 			local h = Instance.new("Highlight", plr.Character)
 			h.Name = "ESP"
 			h.FillColor = color
@@ -305,22 +295,25 @@ local function espTeam(teamName, color)
 	end
 end
 
-ConfigSection:NewToggle({
-	Title = "esp Murderer",
+ConfigTab:CreateToggle({
+	Name = "esp Murderer",
+	CurrentValue = false,
 	Callback = function(v)
 		if v then espTeam("Murderer", Color3.fromRGB(255,0,0)) end
 	end
 })
 
-ConfigSection:NewToggle({
-	Title = "esp sobrevivente",
+ConfigTab:CreateToggle({
+	Name = "esp sobrevivente",
+	CurrentValue = false,
 	Callback = function(v)
 		if v then espTeam("Innocent", Color3.fromRGB(0,255,0)) end
 	end
 })
 
-ConfigSection:NewToggle({
-	Title = "esp Sheriff",
+ConfigTab:CreateToggle({
+	Name = "esp Sheriff",
+	CurrentValue = false,
 	Callback = function(v)
 		if v then espTeam("Sheriff", Color3.fromRGB(0,0,255)) end
 	end
@@ -330,8 +323,9 @@ ConfigSection:NewToggle({
 -- INFINITE JUMP
 ------------------------------------------------
 local infJump = false
-ConfigSection:NewToggle({
-	Title = "infinit pulo",
+ConfigTab:CreateToggle({
+	Name = "infinit pulo",
+	CurrentValue = false,
 	Callback = function(v)
 		infJump = v
 	end
@@ -347,18 +341,19 @@ end)
 -- SPEED
 ------------------------------------------------
 local speedValue = 16
-ConfigSection:NewSlider({
-	Title = "Velocidade",
-	Min = 16,
-	Max = 100,
-	Default = 16,
+ConfigTab:CreateSlider({
+	Name = "Velocidade",
+	Range = {16,100},
+	Increment = 1,
+	CurrentValue = 16,
 	Callback = function(v)
 		speedValue = v
 	end
 })
 
-ConfigSection:NewToggle({
-	Title = "ativar velocidade",
+ConfigTab:CreateToggle({
+	Name = "ativar velocidade",
+	CurrentValue = false,
 	Callback = function(v)
 		RunService.Heartbeat:Connect(function()
 			if v then
@@ -371,8 +366,9 @@ ConfigSection:NewToggle({
 ------------------------------------------------
 -- NOCLIP
 ------------------------------------------------
-ConfigSection:NewToggle({
-	Title = "noclip",
+ConfigTab:CreateToggle({
+	Name = "noclip",
+	CurrentValue = false,
 	Callback = function(v)
 		setNoclip(v)
 	end
@@ -381,8 +377,9 @@ ConfigSection:NewToggle({
 ------------------------------------------------
 -- ESP GUN
 ------------------------------------------------
-ConfigSection:NewToggle({
-	Title = "esp gun",
+ConfigTab:CreateToggle({
+	Name = "esp gun",
+	CurrentValue = false,
 	Callback = function(v)
 		if v then
 			for _,g in pairs(ReplicatedStorage:GetDescendants()) do
@@ -397,25 +394,17 @@ ConfigSection:NewToggle({
 })
 
 ------------------------------------------------
--- DISCORD
+-- ABA DISCORD
 ------------------------------------------------
-local DiscordTab = Window:NewTab({
-	Title = "Discord",
-	Icon = "rbxassetid://7733960981"
-})
+local DiscordTab = Window:CreateTab("Discord", 4483362458)
 
-local DiscordSection = DiscordTab:NewSection({
-	Title = "Info",
-	Position = "Left"
-})
-
-DiscordSection:NewParagraph({
+DiscordTab:CreateParagraph({
 	Title = "Créditos",
-	Description = "script feito por fiat"
+	Content = "script feito por fiat"
 })
 
-DiscordSection:NewButton({
-	Title = "get Discord",
+DiscordTab:CreateButton({
+	Name = "get Discord",
 	Callback = function()
 		setclipboard("https://discord.gg/VGRmqRRz")
 	end
