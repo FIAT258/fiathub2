@@ -20,8 +20,8 @@ local Camera = Workspace.CurrentCamera
 -- WINDOW
 ------------------------------------------------
 local Window = Rayfield:CreateWindow({
-	Name = "NOTHING",
-	LoadingTitle = "NOTHING",
+	Name = "FIAT HUB (murder mysty)",
+	LoadingTitle = "by fiat",
 	LoadingSubtitle = "Auto Farms / Troll / Config",
 	ConfigurationSaving = { Enabled = false },
 	KeySystem = false
