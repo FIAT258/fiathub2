@@ -1,27 +1,27 @@
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua"))()
 
 local Window = Rayfield:CreateWindow({
-	Name = "TESTE RAYFIELD",
+	Name = "TESTE",
 	LoadingTitle = "Teste",
-	LoadingSubtitle = "UI",
-	ConfigurationSaving = {Enabled = false},
+	LoadingSubtitle = "Rayfield",
+	ConfigurationSaving = { Enabled = false },
 	KeySystem = false
 })
 
-local Tab1 = Window:CreateTab("Farm principal", 4483362458)
+local Tab = Window:CreateTab("Aba 1", 4483362458)
 
-Tab1:CreateToggle({
+Tab:CreateToggle({
 	Name = "Toggle Teste",
 	CurrentValue = false,
 	Callback = function(v)
-		print("Toggle:", v)
+		print(v)
 	end
 })
 
-Tab1:CreateButton({
+Tab:CreateButton({
 	Name = "Botão Teste",
 	Callback = function()
-		print("Botão clicado")
+		print("clicou")
 	end
 })
 
