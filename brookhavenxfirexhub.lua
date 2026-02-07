@@ -310,7 +310,7 @@ local DiscordTab = Window:MakeTab({
 DiscordTab:AddDiscordInvite({
  Title = "XfireX HUb /comunidade",
  Description = "me ajuda para mais scripts.",
- Banner = "rbxassetid://1410991992",
+ Banner = "rbxassetid://1203517757",
  Logo = "rbxassetid://84973708912590",
  Invite = "https://discord.gg/VrFBWxJEp5",
  Members = 470000,
