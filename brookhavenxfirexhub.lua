@@ -1,23 +1,17 @@
---// REDZ V5 REMAKE - SCRIPT COMPLETO
---// feito por fiat (como pedido)
+--==================================================
+-- FIAT HUB - REDZ V5 REMAKE
+--==================================================
 
---==================================================
--- LOAD LIBRARY (CORRETA)
---==================================================
+-- LOAD LIB
 local Library = loadstring(game:HttpGet(
 "https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"
 ))()
 
---==================================================
 -- SERVICES
---==================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local Stats = game:GetService("Stats")
-local Lighting = game:GetService("Lighting")
-
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -27,10 +21,10 @@ local Camera = workspace.CurrentCamera
 local Window = Library:MakeWindow({
     Title = "FIAT HUB",
     SubTitle = "Redz V5 Remake",
-    ScriptFolder = "FiatHubV5"
+    ScriptFolder = "FiatHub"
 })
 
--- Minimizer
+-- MINIMIZER
 local Minimizer = Window:NewMinimizer({
     KeyCode = Enum.KeyCode.LeftControl
 })
@@ -38,19 +32,19 @@ local Minimizer = Window:NewMinimizer({
 --==================================================
 -- TABS
 --==================================================
-local MainTab   = Window:MakeTab({"Main", "home"})
-local ToolsTab  = Window:MakeTab({"Tools", "axe"})
-local ConfigTab = Window:MakeTab({"Configuração", "settings"})
-local PingTab   = Window:MakeTab({"Ping", "activity"})
-local DiscordTab= Window:MakeTab({"Discord", "message-circle"})
+local MainTab   = Window:MakeTab({"Main","home"})
+local ToolsTab  = Window:MakeTab({"Tools","axe"})
+local ConfigTab = Window:MakeTab({"Config","settings"})
+local PingTab   = Window:MakeTab({"Ping","activity"})
+local DiscordTab= Window:MakeTab({"Discord","message-circle"})
 
 --==================================================
--- UTIL FUNCTIONS
+-- UTILS
 --==================================================
-local function Notify(title, text)
+local function Notify(t,d)
     Library:Notify({
-        Title = title,
-        Description = text,
+        Title = t,
+        Description = d,
         Time = 4
     })
 end
@@ -58,27 +52,23 @@ end
 --==================================================
 -- PLAYER DROPDOWN
 --==================================================
-local SelectedPlayer = nil
-local PlayerList = {}
+local SelectedPlayer
+local PlayerNames = {}
 
+local PlayerDropdown
 local function RefreshPlayers()
-    PlayerList = {}
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            table.insert(PlayerList, plr.Name)
+    PlayerNames = {}
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(PlayerNames, p.Name)
         end
     end
-    PlayerDropdown:Set(PlayerList)
+    PlayerDropdown:Set(PlayerNames)
 end
-
---==================================================
--- MAIN TAB
---==================================================
 
 PlayerDropdown = MainTab:AddDropdown({
     Name = "Selecionar Player",
     Options = {},
-    Default = nil,
     Callback = function(v)
         SelectedPlayer = Players:FindFirstChild(v)
     end
@@ -88,15 +78,15 @@ MainTab:AddButton({
     Name = "Refresh Player",
     Callback = function()
         RefreshPlayers()
-        Notify("Players", "Lista atualizada")
+        Notify("Players","Lista atualizada")
     end
 })
 
 Players.PlayerAdded:Connect(RefreshPlayers)
-Players.PlayerRemoving:Connect(function(plr)
-    if SelectedPlayer == plr then
+Players.PlayerRemoving:Connect(function(p)
+    if SelectedPlayer == p then
         SelectedPlayer = nil
-        Notify("Player saiu", "Player saiu do jogo")
+        Notify("Player","Player saiu do jogo")
     end
     RefreshPlayers()
 end)
@@ -106,37 +96,35 @@ RefreshPlayers()
 --==================================================
 -- VIEW PLAYER (3ª PESSOA)
 --==================================================
-local ViewConnection
 local Viewing = false
-local OriginalSubject = Camera.CameraSubject
+local ViewConn
 
-MainTab:AddToggle({
+MainTab:AddSwitch({
     Name = "View Player",
     Default = false,
     Callback = function(state)
         Viewing = state
 
-        if ViewConnection then
-            ViewConnection:Disconnect()
-            ViewConnection = nil
+        if ViewConn then
+            ViewConn:Disconnect()
+            ViewConn = nil
         end
 
         if not state then
-            Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             return
         end
 
-        ViewConnection = RunService.RenderStepped:Connect(function()
+        ViewConn = RunService.RenderStepped:Connect(function()
             if SelectedPlayer
             and SelectedPlayer.Character
-            and SelectedPlayer.Character:FindFirstChild("Humanoid")
-            and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+            and SelectedPlayer.Character:FindFirstChild("Humanoid") then
 
+                local hrp = SelectedPlayer.Character.HumanoidRootPart
                 Camera.CameraType = Enum.CameraType.Custom
                 Camera.CameraSubject = SelectedPlayer.Character.Humanoid
-                Camera.CFrame =
-                    SelectedPlayer.Character.HumanoidRootPart.CFrame
-                    * CFrame.new(0, 5, 12)
+                Camera.CFrame = hrp.CFrame * CFrame.new(0,5,12)
             end
         end)
     end
@@ -145,7 +133,7 @@ MainTab:AddToggle({
 --==================================================
 -- FLING BALL (BETA)
 --==================================================
-local FlingBallRunning = false
+local FlingBall = false
 local SoccerModel
 local FlingConn
 
@@ -154,36 +142,34 @@ MainTab:AddParagraph({
     Content = "⚠ Fling Ball em BETA"
 })
 
-MainTab:AddToggle({
-    Name = "Fling Ball (BETA)",
+MainTab:AddSwitch({
+    Name = "Fling Ball",
     Default = false,
     Callback = function(state)
-        FlingBallRunning = state
+        FlingBall = state
 
-        if not state then
-            if FlingConn then FlingConn:Disconnect() end
-            return
+        if FlingConn then
+            FlingConn:Disconnect()
+            FlingConn = nil
         end
 
+        if not state then return end
         if not SelectedPlayer then
-            Notify("Erro", "Selecione um player")
+            Notify("Erro","Selecione um player")
             return
         end
 
-        -- procura tool SoccerBall
-        local toolFound
+        -- procurar tool SoccerBall
         for _,v in ipairs(workspace:GetDescendants()) do
             if v:IsA("Tool") and v.Name == "SoccerBall" then
-                toolFound = v:Clone()
+                v:Clone().Parent = LocalPlayer.Backpack
                 break
             end
         end
 
-        if toolFound then
-            toolFound.Parent = LocalPlayer.Backpack
-            LocalPlayer.Character.Humanoid:EquipTool(toolFound)
-
-            -- 9 clicks
+        local tool = LocalPlayer.Backpack:FindFirstChild("SoccerBall")
+        if tool then
+            LocalPlayer.Character.Humanoid:EquipTool(tool)
             for i=1,9 do
                 VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,0)
                 VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,0)
@@ -199,12 +185,12 @@ MainTab:AddToggle({
         end
 
         if not SoccerModel then
-            Notify("Erro", "Modelo Soccer não encontrado")
+            Notify("Erro","Modelo Soccer não encontrado")
             return
         end
 
         FlingConn = RunService.Heartbeat:Connect(function()
-            if not FlingBallRunning then return end
+            if not FlingBall then return end
             if not SelectedPlayer or not SelectedPlayer.Character then return end
 
             local hrp = SelectedPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -230,137 +216,52 @@ ToolsTab:AddButton({
         local tool = Instance.new("Tool")
         tool.Name = "TPTool"
         tool.RequiresHandle = false
-
         tool.Activated:Connect(function()
             local mouse = LocalPlayer:GetMouse()
             if mouse.Hit then
                 LocalPlayer.Character:MoveTo(mouse.Hit.Position)
             end
         end)
-
         tool.Parent = LocalPlayer.Backpack
-        Notify("Tool", "TP Tool criado")
+        Notify("Tool","TP Tool criado")
     end
 })
-
-ToolsTab:AddButton({
-    Name = "Select Player (Click)",
-    Callback = function()
-        Notify("Info", "Clique em um player")
-        local mouse = LocalPlayer:GetMouse()
-        mouse.Button1Down:Wait()
-        if mouse.Target then
-            local hum = mouse.Target.Parent:FindFirstChild("Humanoid")
-            if hum then
-                Notify("Player", mouse.Target.Parent.Name)
-            end
-        end
-    end
-})
-
-local ToolList = {}
-local SelectedTool
-
-local function RefreshTools()
-    ToolList = {}
-    for _,v in ipairs(workspace:GetDescendants()) do
-        if v:IsA("Tool") then
-            table.insert(ToolList, v.Name)
-        end
-    end
-    ToolDropdown:Set(ToolList)
-end
-
-ToolDropdown = ToolsTab:AddDropdown({
-    Name = "Tools do Jogo",
-    Options = {},
-    Callback = function(v)
-        SelectedTool = v
-    end
-})
-
-ToolsTab:AddButton({
-    Name = "Get Tool",
-    Callback = function()
-        if not SelectedTool then return end
-        for _,v in ipairs(workspace:GetDescendants()) do
-            if v:IsA("Tool") and v.Name == SelectedTool then
-                v:Clone().Parent = LocalPlayer.Backpack
-                Notify("Tool", "Tool adicionado")
-                break
-            end
-        end
-    end
-})
-
-RefreshTools()
 
 --==================================================
 -- CONFIG TAB
 --==================================================
-local AntiLag = false
-local LightConn
-
-ConfigTab:AddToggle({
+ConfigTab:AddSwitch({
     Name = "Anti Lag (bloquear novas luzes)",
     Default = false,
     Callback = function(state)
-        AntiLag = state
-        if LightConn then LightConn:Disconnect() end
-
-        if state then
-            LightConn = workspace.DescendantAdded:Connect(function(v)
-                if v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
-                    v.Enabled = false
-                end
-            end)
-        end
-    end
-})
-
-local TexturesRemoved = {}
-
-ConfigTab:AddToggle({
-    Name = "Remover Texturas",
-    Default = false,
-    Callback = function(state)
-        if state then
-            for _,v in ipairs(workspace:GetDescendants()) do
-                if v:IsA("Decal") or v:IsA("Texture") then
-                    TexturesRemoved[v] = v.Transparency
-                    v.Transparency = 1
-                end
+        if not state then return end
+        workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
+                v.Enabled = false
             end
-        else
-            for v,trans in pairs(TexturesRemoved) do
-                if v then
-                    v.Transparency = trans
-                end
-            end
-            TexturesRemoved = {}
-        end
+        end)
     end
 })
 
 --==================================================
 -- PING TAB
 --==================================================
-PingTab:AddToggle({
+PingTab:AddSwitch({
     Name = "Check Ping Server",
     Default = false,
     Callback = function(state)
         if not state then return end
-
         task.spawn(function()
             while state do
-                local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-
+                local ping = math.floor(
+                    Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+                )
                 if ping <= 29 then
                     Notify("🟢 Ping ótimo", ping.." ms")
                 elseif ping > 100 and ping <= 200 then
                     Notify("🟡 Ping estranho", ping.." ms")
                 elseif ping > 200 then
-                    Notify("🔴 Lag pesado", "Ative Anti Lag e Remover Texturas")
+                    Notify("🔴 Lag pesado","Ative Anti Lag")
                 end
                 task.wait(5)
             end
@@ -373,8 +274,7 @@ PingTab:AddToggle({
 --==================================================
 DiscordTab:AddParagraph({
     Title = "Discord",
-    Content = "Script feito por fiat\nEntre no discord para updates"
+    Content = "Script feito por fiat\nhttps://discord.gg/VrFBWxJEp5"
 })
 
---==================================================
-Notify("FIAT HUB", "Script carregado com sucesso")
+Notify("FIAT HUB","Script carregado com sucesso")
