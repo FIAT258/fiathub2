@@ -308,10 +308,10 @@ local DiscordTab = Window:MakeTab({
 })
 
 DiscordTab:AddDiscordInvite({
- Title = "redz Hub | Community",
- Description = "A community for redz Hub Users -- official scripts, updates, and suport in one place.",
+ Title = "XfireX HUb /comunidade",
+ Description = "me ajuda para mais scripts.",
  Banner = "rbxassetid://17382040552",
- Logo = "rbxassetid://17382040552",
+ Logo = "84973708912590",
  Invite = "https://discord.gg/redz-hub",
  Members = 470000,
  Online = 20000
