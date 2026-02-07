@@ -14,7 +14,7 @@ local Library = loadstring(game:HttpGet(
 local Window = Library:MakeWindow({
  Title = "XfireX HUB",
  SubTitle = "(BETA) by fiat",
- ScriptFolder = "FiatHub"
+ ScriptFolder = "XfireX HUB by fiat"
 })
 
 local Minimizer = Window:NewMinimizer({
