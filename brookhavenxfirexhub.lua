@@ -12,8 +12,8 @@ local Library = loadstring(game:HttpGet(
 
 --// WINDOW
 local Window = Library:MakeWindow({
- Title = "Fiat Hub",
- SubTitle = "Update Grande",
+ Title = "XfireX HUB",
+ SubTitle = "(BETA) by fiat",
  ScriptFolder = "FiatHub"
 })
 
