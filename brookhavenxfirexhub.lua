@@ -1,14 +1,16 @@
---// REDZ V5 REMAKE - UPDATE GRANDE
+--// SERVICES
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+--// LIB
 local Library = loadstring(game:HttpGet(
  "https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"
 ))()
 
+--// WINDOW
 local Window = Library:MakeWindow({
  Title = "Fiat Hub",
  SubTitle = "Update Grande",
@@ -19,114 +21,143 @@ local Minimizer = Window:NewMinimizer({
  KeyCode = Enum.KeyCode.LeftControl
 })
 
--- ================= PLAYERS =================
-local function getPlayers()
+--// UTILS
+local function GetPlayers()
  local t = {}
  for _,p in pairs(Players:GetPlayers()) do
-  if p ~= LocalPlayer then table.insert(t,p.Name) end
+  if p ~= LocalPlayer then
+   table.insert(t,p.Name)
+  end
  end
  return t
 end
 
--- ================= MAIN =================
-local Main = Window:MakeTab({Name="Main"})
-local SelectedPlayer
-local ViewConn
-local FlingConn
-local SoccerModel
-
-local PlayerDrop = Main:AddDropdown({
- Name="Select Player",
- Options=getPlayers(),
- Callback=function(v) SelectedPlayer=v end
+--==================================================
+-- MAIN TAB
+--==================================================
+local MainTab = Window:MakeTab({
+ Title = "Main",
+ Icon = "Home"
 })
 
-Main:AddButton({
- Name="Refresh Player",
- Callback=function() PlayerDrop:Set(getPlayers()) end
+local SelectedPlayer = nil
+local ViewConnection = nil
+local FlingConnection = nil
+local SoccerModel = nil
+
+local PlayerDropdown = MainTab:AddDropdown({
+ Name = "Select Player",
+ Options = GetPlayers(),
+ Callback = function(v)
+  SelectedPlayer = v
+ end
 })
 
-Main:AddSwitch({
- Name="View Player",
- Default=false,
- Callback=function(v)
-  if v then
-   ViewConn = RunService.RenderStepped:Connect(function()
+MainTab:AddButton({
+ Name = "Refresh Player",
+ Callback = function()
+  PlayerDropdown:Set(GetPlayers())
+ end
+})
+
+-- VIEW PLAYER
+MainTab:AddToggle({
+ Name = "View Player",
+ Default = false,
+ Callback = function(Value)
+  if Value then
+   ViewConnection = RunService.RenderStepped:Connect(function()
     local p = Players:FindFirstChild(SelectedPlayer or "")
     if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
      Camera.CameraType = Enum.CameraType.Scriptable
-     Camera.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0,3,10)
+     Camera.CFrame =
+      p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 10)
     end
    end)
   else
-   if ViewConn then ViewConn:Disconnect() end
+   if ViewConnection then ViewConnection:Disconnect() end
    Camera.CameraType = Enum.CameraType.Custom
   end
  end
 })
 
-Main:AddSwitch({
- Name="Fling Ball (BETA)",
- Default=false,
- Callback=function(v)
-  if v then
+-- FLING BALL
+MainTab:AddToggle({
+ Name = "Fling Ball (BETA)",
+ Default = false,
+ Callback = function(Value)
+  if Value then
    -- pegar SoccerBall
-   for _,t in pairs(workspace:GetDescendants()) do
-    if t:IsA("Tool") and t.Name=="SoccerBall" then
-     t.Parent=LocalPlayer.Backpack
+   for _,v in pairs(workspace:GetDescendants()) do
+    if v:IsA("Tool") and v.Name == "SoccerBall" then
+     v.Parent = LocalPlayer.Backpack
     end
    end
 
    local tool = LocalPlayer.Backpack:FindFirstChild("SoccerBall")
    if tool then
     LocalPlayer.Character.Humanoid:EquipTool(tool)
-    for i=1,9 do
+    for i = 1,9 do
      mouse1click()
     end
    end
 
-   -- achar model Soccer
+   -- pegar modelo Soccer
    for _,m in pairs(workspace:GetDescendants()) do
-    if m:IsA("Model") and m.Name=="Soccer" then
-     SoccerModel=m
+    if m:IsA("Model") and m.Name == "Soccer" then
+     SoccerModel = m
     end
    end
 
-   FlingConn = RunService.Heartbeat:Connect(function()
+   FlingConnection = RunService.Heartbeat:Connect(function()
     local p = Players:FindFirstChild(SelectedPlayer or "")
     if not p then
-     Library:Notify({Title="Info",Description="Player saiu do jogo",Time=4})
-     if FlingConn then FlingConn:Disconnect() end
+     Window:Notify({
+      Title = "Info",
+      Content = "Player saiu do jogo",
+      Duration = 4
+     })
+     FlingConnection:Disconnect()
      return
     end
 
-    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and SoccerModel and SoccerModel.PrimaryPart then
+    if p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+     and SoccerModel and SoccerModel.PrimaryPart then
+
      local hrp = p.Character.HumanoidRootPart
      SoccerModel:SetPrimaryPartCFrame(
-      CFrame.new(hrp.Position + (hrp.CFrame.LookVector * 2))
+      CFrame.new(hrp.Position + hrp.CFrame.LookVector * 2)
      )
-     SoccerModel.PrimaryPart.AssemblyAngularVelocity = Vector3.new(0,9999,0)
+     SoccerModel.PrimaryPart.AssemblyAngularVelocity =
+      Vector3.new(0, 9999, 0)
     end
    end)
   else
-   if FlingConn then FlingConn:Disconnect() end
+   if FlingConnection then FlingConnection:Disconnect() end
   end
  end
 })
 
-Main:AddParagraph({
- Title="Info",
- Content="Fling Ball em BETA junto com o script"
+MainTab:AddParagraph(
+ "Info",
+ "Fling Ball em BETA junto com o script"
+)
+
+--==================================================
+-- TOOLS TAB
+--==================================================
+local ToolsTab = Window:MakeTab({
+ Title = "Tools",
+ Icon = "🪓"
 })
 
--- ================= TOOLS =================
-local Tools = Window:MakeTab({Name="Tools",Icon="🪓"})
+ToolsTab:AddButton({
+ Name = "TP Tool",
+ Callback = function()
+  local Tool = Instance.new("Tool")
+  Tool.Name = "TP Tool"
+  Tool.Parent = LocalPlayer.Backpack
 
-Tools:AddButton({
- Name="TP Tool",
- Callback=function()
-  local Tool = Instance.new("Tool",LocalPlayer.Backpack)
-  Tool.Name="TP Tool"
   Tool.Activated:Connect(function()
    local mouse = LocalPlayer:GetMouse()
    if mouse.Hit then
@@ -136,83 +167,112 @@ Tools:AddButton({
  end
 })
 
-Tools:AddButton({
- Name="Select Tool Player",
- Callback=function()
+ToolsTab:AddButton({
+ Name = "Select Tool Player",
+ Callback = function()
   local mouse = LocalPlayer:GetMouse()
   mouse.Button1Down:Wait()
-  if mouse.Target then
-   local p = Players:GetPlayerFromCharacter(mouse.Target.Parent)
-   if p then
-    Library:Notify({Title="Player",Description=p.Name,Time=3})
+  local p = Players:GetPlayerFromCharacter(mouse.Target.Parent)
+  if p then
+   Window:Notify({
+    Title = "Player Selecionado",
+    Content = p.Name,
+    Duration = 3
+   })
+  end
+ end
+})
+
+local ToolDropdown = ToolsTab:AddDropdown({
+ Name = "Tools do Jogo",
+ Options = {}
+})
+
+ToolsTab:AddButton({
+ Name = "Refresh Tools",
+ Callback = function()
+  local t = {}
+  for _,v in pairs(workspace:GetDescendants()) do
+   if v:IsA("Tool") then
+    table.insert(t, v.Name)
+   end
+  end
+  ToolDropdown:Set(t)
+ end
+})
+
+ToolsTab:AddButton({
+ Name = "Get Tool",
+ Callback = function()
+  local name = ToolDropdown.Value
+  for _,v in pairs(workspace:GetDescendants()) do
+   if v:IsA("Tool") and v.Name == name then
+    v.Parent = LocalPlayer.Backpack
    end
   end
  end
 })
 
-local ToolDrop = Tools:AddDropdown({
- Name="Tools do Jogo",
- Options={}
+--==================================================
+-- CONFIG TAB
+--==================================================
+local ConfigTab = Window:MakeTab({
+ Title = "Configuração",
+ Icon = "Settings"
 })
 
-Tools:AddButton({
- Name="Refresh Tools",
- Callback=function()
-  local t={}
-  for _,v in pairs(workspace:GetDescendants()) do
-   if v:IsA("Tool") then table.insert(t,v.Name) end
-  end
-  ToolDrop:Set(t)
+local AntiLag = false
+
+ConfigTab:AddToggle({
+ Name = "Anti Lag",
+ Default = false,
+ Callback = function(v)
+  AntiLag = v
  end
-})
-
-Tools:AddButton({
- Name="Get Tool",
- Callback=function()
-  local name = ToolDrop.Value
-  for _,v in pairs(workspace:GetDescendants()) do
-   if v:IsA("Tool") and v.Name==name then
-    v.Parent=LocalPlayer.Backpack
-   end
-  end
- end
-})
-
--- ================= CONFIG =================
-local Config = Window:MakeTab({Name="Config"})
-local AntiLag=false
-
-Config:AddSwitch({
- Name="Anti Lag",
- Default=false,
- Callback=function(v) AntiLag=v end
 })
 
 workspace.DescendantAdded:Connect(function(o)
- if AntiLag and (o:IsA("PointLight") or o:IsA("SurfaceLight") or o:IsA("SpotLight")) then
-  o.Enabled=false
+ if AntiLag and (o:IsA("PointLight") or o:IsA("SpotLight") or o:IsA("SurfaceLight")) then
+  o.Enabled = false
  end
 end)
 
--- ================= PING =================
-local Ping = Window:MakeTab({Name="Ping"})
-local CheckPing=false
-local SavedTextures={}
+--==================================================
+-- PING TAB
+--==================================================
+local PingTab = Window:MakeTab({
+ Title = "Ping",
+ Icon = "Signal"
+})
 
-Ping:AddSwitch({
- Name="Check Ping Server",
- Default=false,
- Callback=function(v)
-  CheckPing=v
+local CheckPing = false
+local SavedMaterials = {}
+
+PingTab:AddToggle({
+ Name = "Check Ping Server",
+ Default = false,
+ Callback = function(v)
+  CheckPing = v
   task.spawn(function()
    while CheckPing do
-    local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-    if ping<=29 then
-     Library:Notify({Title="🟢 Ping ótimo",Description=ping.." ms",Time=2})
-    elseif ping>=200 then
-     Library:Notify({Title="🔴 Lag pesado",Description="Ative anti lag e remover texturas",Time=4})
-    elseif ping>=100 then
-     Library:Notify({Title="🟡 Ping estranho",Description=ping.." ms",Time=3})
+    local ping = math.floor(
+     Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    )
+
+    if ping <= 29 then
+     Window:Notify({Title="🟢 Ping ótimo",Content=ping.." ms",Duration=3})
+    elseif ping >= 200 then
+     Window:Notify({
+      Title="🔴 Lag pesado",
+      Content="Ative anti lag e remover texturas",
+      Duration=4
+     })
+    elseif ping >= 100 then
+     Window:Notify({
+      Title="🟡 Ping estranho",
+      Content=ping.." ms",
+      Duration=3
+     })
     end
     task.wait(5)
    end
@@ -220,21 +280,39 @@ Ping:AddSwitch({
  end
 })
 
-Ping:AddSwitch({
- Name="Remover Texturas",
- Default=false,
- Callback=function(v)
+PingTab:AddToggle({
+ Name = "Remover Texturas",
+ Default = false,
+ Callback = function(v)
   if v then
    for _,p in pairs(workspace:GetDescendants()) do
     if p:IsA("BasePart") then
-     SavedTextures[p]=p.Material
-     p.Material=Enum.Material.SmoothPlastic
+     SavedMaterials[p] = p.Material
+     p.Material = Enum.Material.SmoothPlastic
     end
    end
   else
-   for p,m in pairs(SavedTextures) do
-    if p then p.Material=m end
+   for p,m in pairs(SavedMaterials) do
+    if p then p.Material = m end
    end
   end
  end
+})
+
+--==================================================
+-- DISCORD TAB
+--==================================================
+local DiscordTab = Window:MakeTab({
+ Title = "Discord",
+ Icon = "Discord"
+})
+
+DiscordTab:AddDiscordInvite({
+ Title = "redz Hub | Community",
+ Description = "A community for redz Hub Users -- official scripts, updates, and suport in one place.",
+ Banner = "rbxassetid://17382040552",
+ Logo = "rbxassetid://17382040552",
+ Invite = "https://discord.gg/redz-hub",
+ Members = 470000,
+ Online = 20000
 })
