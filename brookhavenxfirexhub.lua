@@ -2,24 +2,15 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 --// LIB
-local success, Library = pcall(function()
- return loadstring(game:HttpGet(
-  "https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"
- ))()
-end)
-
-if not success or not Library then
- warn("Erro ao carregar a Library! Verifique o link.")
- return
-end
-
-print("Library carregada com sucesso!")
+local Library = loadstring(game:HttpGet(
+ "https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"
+))()
 
 Library:SetUIScale(2.0)
 
@@ -30,14 +21,6 @@ local Window = Library:MakeWindow({
  ScriptFolder = "FiatHub"
 })
 
-if not Window then
- warn("Erro ao criar a janela!")
- return
-end
-
-print("Janela criada com sucesso!")
-
--- Minimizer (opcional)
 local Minimizer = Window:NewMinimizer({
  KeyCode = Enum.KeyCode.LeftControl
 })
@@ -53,103 +36,60 @@ local function GetPlayers()
  return t
 end
 
--- Ícones IDs
-local ICONS = {
-    Home = 10723407389,          -- home
-    Tools = 10723405360,         -- hammer
-    Ping = 10734961133,          -- signal
-    Discord = 10734930886,       -- puzzle
-    Roubado = 10734966248,       -- star
-    Som = 10734905958,           -- music
-    Config = 10709810948         -- cog
-}
-
 --==================================================
 -- MAIN TAB
 --==================================================
 local MainTab = Window:MakeTab({
  Title = "Main",
- Icon = ICONS.Home
+ Icon = "Home"
 })
-
-if not MainTab then
- warn("Erro ao criar a aba Main!")
- return
-end
-
-print("Aba Main criada com sucesso!")
 
 local SelectedPlayer = nil
 local ViewConnection = nil
 local FlingConnection = nil
 local SoccerModel = nil
-local CameraOffset = Vector3.new(0, 3, 15) -- Distância maior da câmera
-local CameraAngle = 0
 
--- Dropdown para selecionar jogador
 local PlayerDropdown = MainTab:AddDropdown({
  Name = "Select Player",
  Options = GetPlayers(),
  Callback = function(v)
   SelectedPlayer = v
-  print("Player selecionado:", v)
  end
 })
 
--- Botão para atualizar lista de jogadores
 MainTab:AddButton({
  Name = "Refresh Player",
  Callback = function()
   PlayerDropdown:Set(GetPlayers())
-  print("Lista de players atualizada!")
  end
 })
 
--- Toggle para visualizar jogador
+-- VIEW PLAYER
 MainTab:AddToggle({
  Name = "View Player",
  Default = false,
  Callback = function(Value)
   if Value then
-   print("View Player ativado!")
-   -- Conexão para girar a câmera com o mouse
-   local InputConnection
-   InputConnection = UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-     CameraAngle = CameraAngle + input.Delta.X * 0.01
-    end
-   end)
-
    ViewConnection = RunService.RenderStepped:Connect(function()
     local p = Players:FindFirstChild(SelectedPlayer or "")
     if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
      Camera.CameraType = Enum.CameraType.Scriptable
-     
-     -- Calcular posição da câmera com rotação
-     local offset = CFrame.Angles(0, CameraAngle, 0) * CameraOffset
-     Camera.CFrame = CFrame.lookAt(
-      p.Character.HumanoidRootPart.Position + offset,
-      p.Character.HumanoidRootPart.Position
-     )
+     Camera.CFrame =
+      p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 10)
     end
    end)
   else
-   if ViewConnection then 
-    ViewConnection:Disconnect() 
-    ViewConnection = nil
-   end
+   if ViewConnection then ViewConnection:Disconnect() end
    Camera.CameraType = Enum.CameraType.Custom
-   CameraAngle = 0
-   print("View Player desativado!")
   end
  end
 })
 
--- Toggle para Fling Ball
+-- FLING BALL
 MainTab:AddToggle({
  Name = "Fling Ball (BETA)",
  Default = false,
- Callback = function(Value)
+ Callback = func(Value)
   if Value then
    -- pegar SoccerBall
    for _,v in pairs(workspace:GetDescendants()) do
@@ -202,7 +142,6 @@ MainTab:AddToggle({
  end
 })
 
--- Parágrafo informativo
 MainTab:AddParagraph(
  "Info",
  "Fling Ball em BETA junto com o script"
@@ -213,75 +152,25 @@ MainTab:AddParagraph(
 --==================================================
 local ToolsTab = Window:MakeTab({
  Title = "Tools",
- Icon = ICONS.Tools
+ Icon = "Hammer"
 })
 
--- Botão para criar Teleport Tool
 ToolsTab:AddButton({
- Name = "Teleport Tool",
+ Name = "TP Tool",
  Callback = function()
-  -- Verificar se já existe a ferramenta
-  local existingTool = LocalPlayer.Backpack:FindFirstChild("Teleport Tool") or 
-                      LocalPlayer.Character:FindFirstChild("Teleport Tool")
-  
-  if existingTool then
-   Window:Notify({
-    Title = "Info",
-    Content = "Você já tem a Teleport Tool!",
-    Duration = 3
-   })
-   return
-  end
-
-  -- Criar a ferramenta
   local Tool = Instance.new("Tool")
-  Tool.Name = "Teleport Tool"
+  Tool.Name = "TP Tool"
   Tool.Parent = LocalPlayer.Backpack
-  Tool.ToolTip = "Clique para teleportar"
-  
-  -- Ícone da ferramenta (opcional)
-  Tool.TextureId = "rbxassetid://7072706620" -- Ícone de teleporte
 
   Tool.Activated:Connect(function()
-   local character = LocalPlayer.Character
-   if not character then return end
-   
-   local humanoid = character:FindFirstChildOfClass("Humanoid")
-   if not humanoid then return end
-   
-   local hrp = character:FindFirstChild("HumanoidRootPart")
-   if not hrp then return end
-   
    local mouse = LocalPlayer:GetMouse()
-   if mouse.Target then
-    -- Teleportar para a posição do mouse
-    local targetPos = mouse.Hit.Position
-    local offset = Vector3.new(0, humanoid.HipHeight + (hrp.Size.Y/2), 0)
-    
-    hrp.CFrame = CFrame.new(targetPos + offset)
-    
-    Window:Notify({
-     Title = "Teleport",
-     Content = "Teleportado com sucesso!",
-     Duration = 2
-    })
+   if mouse.Hit then
+    LocalPlayer.Character.HumanoidRootPart.CFrame = mouse.Hit
    end
   end)
-  
-  -- Equipar automaticamente
-  if LocalPlayer.Character then
-   Tool.Parent = LocalPlayer.Character
-  end
-  
-  Window:Notify({
-   Title = "Sucesso",
-   Content = "Teleport Tool adicionada ao seu inventário!",
-   Duration = 4
-  })
  end
 })
 
--- Botão para selecionar jogador
 ToolsTab:AddButton({
  Name = "Select Tool Player",
  Callback = function()
@@ -298,13 +187,11 @@ ToolsTab:AddButton({
  end
 })
 
--- Dropdown para selecionar ferramentas do jogo
 local ToolDropdown = ToolsTab:AddDropdown({
  Name = "Tools do Jogo",
  Options = {}
 })
 
--- Botão para atualizar lista de ferramentas
 ToolsTab:AddButton({
  Name = "Refresh Tools",
  Callback = function()
@@ -318,7 +205,6 @@ ToolsTab:AddButton({
  end
 })
 
--- Botão para pegar ferramenta
 ToolsTab:AddButton({
  Name = "Get Tool",
  Callback = function()
@@ -331,10 +217,9 @@ ToolsTab:AddButton({
  end
 })
 
--- Parágrafo informativo
 ToolsTab:AddParagraph(
  "Info",
- "Aba Tools funcionando em breve"
+ "aba funcionando em breve"
 )
 
 --==================================================
@@ -342,131 +227,264 @@ ToolsTab:AddParagraph(
 --==================================================
 local PingTab = Window:MakeTab({
  Title = "Ping",
- Icon = ICONS.Ping
+ Icon = "Signal"
 })
 
--- Slider para ajustar ping
-PingTab:AddSlider({
- Name = "Ajustar Ping",
- Min = 0,
- Max = 1000,
- Default = 0,
- Callback = function(Value)
-  Stats.Network.ServerStatsItem["Data Ping"]:SetValue(Value)
+local AntiLag = false
+
+PingTab:AddToggle({
+ Name = "Anti Lag",
+ Default = false,
+ Callback = function(v)
+  AntiLag = v
  end
 })
 
--- Parágrafo informativo
-PingTab:AddParagraph(
- "Info",
- "Ajuste seu ping para valores mais baixos."
-)
+workspace.DescendantAdded:Connect(function(o)
+ if AntiLag and (o:IsA("PointLight") or o:IsA("SpotLight") or o:IsA("SurfaceLight")) then
+  o.Enabled = false
+ end
+end)
+
+local CheckPing = false
+local SavedMaterials = {}
+
+PingTab:AddToggle({
+ Name = "Check Ping Server",
+ Default = false,
+ Callback = function(v)
+  CheckPing = v
+  task.spawn(function()
+   while CheckPing do
+    local ping = math.floor(
+     Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    )
+
+    if ping <= 29 then
+     Window:Notify({Title="🟢 Ping ótimo",Content=ping.." ms",Duration=3})
+    elseif ping >= 200 then
+     Window:Notify({
+      Title="🔴 Lag pesado",
+      Content="Ative anti lag e remover texturas",
+      Duration=4
+     })
+    elseif ping >= 100 then
+     Window:Notify({
+      Title="🟡 Ping estranho",
+      Content=ping.." ms",
+      Duration=3
+     })
+    end
+    task.wait(5)
+   end
+  end)
+ end
+})
+
+PingTab:AddToggle({
+ Name = "Remover Texturas",
+ Default = false,
+ Callback = function(v)
+  if v then
+   for _,p in pairs(workspace:GetDescendants()) do
+    if p:IsA("BasePart") then
+     SavedMaterials[p] = p.Material
+     p.Material = Enum.Material.SmoothPlastic
+    end
+   end
+  else
+   for p,m in pairs(SavedMaterials) do
+    if p then p.Material = m end
+   end
+  end
+ end
+})
 
 --==================================================
 -- DISCORD TAB
 --==================================================
 local DiscordTab = Window:MakeTab({
  Title = "Discord",
- Icon = ICONS.Discord
+ Icon = "Discord"
 })
 
--- Botão para copiar link do Discord
-DiscordTab:AddButton({
- Name = "Copiar Link do Discord",
- Callback = function()
-  setclipboard("https://discord.gg/xxxxxx")
-  Window:Notify({
-   Title = "Discord",
-   Content = "Link copiado!",
-   Duration = 3
-  })
- end
+DiscordTab:AddDiscordInvite({
+ Title = "XfireX HUB",
+ Description = "gg ez.",
+ Banner = "rbxassetid://82224027035247",
+ Logo = "rbxassetid://84973708912590",
+ Invite = "https://discord.gg/VrFBWxJEp5",
+ Members = 67,
+ Online = 67
 })
-
--- Parágrafo informativo
-DiscordTab:AddParagraph(
- "Info",
- "Entre no nosso Discord para mais scripts!"
-)
 
 --==================================================
 -- ROUBADO TAB
 --==================================================
 local RoubadoTab = Window:MakeTab({
  Title = "Roubado",
- Icon = ICONS.Roubado
+ Icon = "Star"
 })
 
--- Botão para ativar script roubado
-RoubadoTab:AddButton({
- Name = "Ativar Script Roubado",
- Callback = function()
-  Window:Notify({
-   Title = "Roubado",
-   Content = "Script roubado ativado!",
-   Duration = 3
-  })
+local playerDropdownRoubado = RoubadoTab:AddDropdown({
+ Name = "Select Player",
+ Options = GetPlayers(),
+ Callback = function(v)
+  SelectedPlayer = v
  end
 })
 
--- Parágrafo informativo
-RoubadoTab:AddParagraph(
- "Info",
- "Scripts roubados podem não funcionar corretamente."
-)
+Players.PlayerAdded:Connect(function(player)
+ playerDropdownRoubado:Set(GetPlayers())
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+ playerDropdownRoubado:Set(GetPlayers())
+end)
+
+RoubadoTab:AddToggle({
+ Name = "Bug Player FE",
+ Default = false,
+ Callback = function(Value)
+  if Value then
+   Window:Notify({
+    Title = "Bug Player FE",
+    Content = "Ponha um ônibus para melhorar",
+    Duration = 4
+   })
+   
+   local player = Players:FindFirstChild(SelectedPlayer)
+   if player and player.Character then
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+     hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -130)
+     task.wait(2)
+     
+     for _, obj in ipairs(workspace:GetDescendants()) do
+      if obj.Name == "VehicleSeat" and (obj.Position - hrp.Position).Magnitude <= 40 then
+       hrp.CFrame = obj.CFrame
+       break
+      end
+     end
+     
+     -- Magnetismo
+     local RAIO = 120
+     local VELOCIDADE_ROT = 6
+     local originais = {}
+     
+     RunService.RenderStepped:Connect(function()
+      if not player or not player.Character then return end
+      local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+      if not hrp then return end
+      
+      for _, obj in ipairs(workspace:GetDescendants()) do
+       if obj:IsA("BasePart")
+        and not obj.Anchored
+        and not obj:IsDescendantOf(player.Character) then
+        
+        local dist = (obj.Position - hrp.Position).Magnitude
+        if dist <= RAIO then
+         if not originais[obj] then
+          originais[obj] = obj.CFrame
+         end
+         
+         local ang = os.clock() * VELOCIDADE_ROT
+         obj.AssemblyLinearVelocity = Vector3.zero
+         obj.CFrame = hrp.CFrame * CFrame.Angles(ang, ang * 0.7, ang * 1.1)
+        end
+       end
+      end
+     end)
+    end
+   end
+  end
+ end
+})
 
 --==================================================
 -- SOM TAB
 --==================================================
 local SomTab = Window:MakeTab({
  Title = "Som",
- Icon = ICONS.Som
+ Icon = "Music"
 })
 
--- Slider para ajustar volume
-SomTab:AddSlider({
- Name = "Ajustar Volume",
- Min = 0,
- Max = 100,
- Default = 50,
+local selectedAudioID = nil
+local audioLoop = false
+local fastLoop = false
+
+local function PlayAudio(ID)
+ if ID then
+  pcall(function()
+   ReplicatedStorage:FindFirstChild("1Gu1nSound1s", true)
+    :FireServer(Workspace, ID, 1)
+  end)
+ end
+end
+
+SomTab:AddTextBox({
+ Name = "Coloque o ID do áudio",
+ Default = "",
+ Placeholder = "Digite o ID aqui...",
+ ClearOnFocus = true,
  Callback = function(Value)
-  game:GetService("SoundService").AmbientVolume = Value
+  selectedAudioID = tonumber(Value)
  end
 })
 
--- Parágrafo informativo
+SomTab:AddButton({
+ Name = "Tocar Áudio",
+ Debounce = 0.5,
+ Callback = function()
+  PlayAudio(selectedAudioID)
+ end
+})
+
+SomTab:AddToggle({
+ Name = "Loop Áudio",
+ Default = false,
+ Callback = function(Value)
+  audioLoop = Value
+  task.spawn(function()
+   while audioLoop do
+    PlayAudio(selectedAudioID)
+    task.wait(1)
+   end
+  end)
+ end
+})
+
+SomTab:AddToggle({
+ Name = "Loop Rápido (Spam)",
+ Default = false,
+ Callback = function(Value)
+  fastLoop = Value
+  task.spawn(function()
+   while fastLoop do
+    PlayAudio(selectedAudioID)
+    task.wait()
+   end
+  end)
+ end
+})
+
+SomTab:AddButton({
+ Name = "Parar Tudo",
+ Debounce = 0.5,
+ Callback = function()
+  audioLoop = false
+  fastLoop = false
+ end
+})
+
 SomTab:AddParagraph(
  "Info",
- "Ajuste o volume do jogo."
+ "Controle de áudio completo"
 )
 
---==================================================
--- CONFIG TAB
---==================================================
-local ConfigTab = Window:MakeTab({
- Title = "Config",
- Icon = ICONS.Config
-})
-
--- Botão para salvar configurações
-ConfigTab:AddButton({
- Name = "Salvar Configurações",
- Callback = function()
-  Window:Notify({
-   Title = "Configurações",
-   Content = "Configurações salvas com sucesso!",
-   Duration = 3
-  })
- end
-})
-
--- Parágrafo informativo
-ConfigTab:AddParagraph(
+RoubadoTab:AddParagraph(
  "Info",
- "Configure suas preferências aqui."
+ "Usse ônibus ele não serve pra dar fling serve pra travar e lagar o player. Ele tipo vai dar mini fling e vai puxar o player na mesma tempo. Player vai tar normal mais vai tar travando muito, as vezes buga mais está em beta vou melhorar depois"
 )
 
---==================================================
--- FINALIZAÇÃO
---==================================================
 print("Script carregado com sucesso!")
