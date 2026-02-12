@@ -6,7 +6,7 @@ local Window = Fluent:CreateWindow({
     Title = "XfireX HUB (BETA)",
     SubTitle = "by fiat",
     TabWidth = 160,
-    Size = UDim2.fromOffset(540, 440),
+    Size = UDim2.fromOffset(490, 390),
     Acrylic = true,
     Theme = "Darker",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -18,6 +18,8 @@ local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
@@ -44,6 +46,7 @@ local SavedMaterials = {}
 local selectedAudioID = nil
 local audioLoop = false
 local fastLoop = false
+local couchConnection = nil
 
 -- Player list management
 local function GetPlayers()
@@ -114,7 +117,7 @@ Options.ViewPlayerToggle:OnChanged(function(Value)
     end
 end)
 
--- Fling Ball Toggle
+-- Fling Ball Toggle (ATUALIZADO)
 Options.FlingBallToggle = Tabs.Main:AddToggle("FlingBallToggle", {
     Title = "Fling Ball (BETA)",
     Default = false,
@@ -122,57 +125,114 @@ Options.FlingBallToggle = Tabs.Main:AddToggle("FlingBallToggle", {
 
 Options.FlingBallToggle:OnChanged(function(Value)
     if Value then
-        -- pegar SoccerBall
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("Tool") and v.Name == "SoccerBall" then
-                v.Parent = LocalPlayer.Backpack
+        -- Equip SoccerBall tool
+        for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
+            if v.Name == "SoccerBall" then
+                LocalPlayer.Character.Humanoid:EquipTool(v)
+                break
             end
         end
 
-        local tool = LocalPlayer.Backpack:FindFirstChild("SoccerBall")
-        if tool then
-            LocalPlayer.Character.Humanoid:EquipTool(tool)
-            for i = 1, 9 do
-                mouse1click()
+        -- Simulate clicks
+        for i = 1, 9 do
+            mouse1click()
+            task.wait(0.1)
+        end
+
+        -- Find Soccer part/model
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj.Name == "Soccer" and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                SoccerModel = obj
+                break
             end
         end
 
-        -- pegar modelo Soccer
-        for _, m in pairs(workspace:GetDescendants()) do
-            if m:IsA("Model") and m.Name == "Soccer" then
-                SoccerModel = m
-            end
+        if SoccerModel then
+            FlingConnection = RunService.Heartbeat:Connect(function()
+                local p = Players:FindFirstChild(SelectedPlayer or "")
+                if not p then
+                    Fluent:Notify({
+                        Title = "Info",
+                        Content = "Player saiu do jogo",
+                        Duration = 4
+                    })
+                    Options.FlingBallToggle:SetValue(false)
+                    return
+                end
+
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = p.Character.HumanoidRootPart
+                    if SoccerModel:IsA("BasePart") then
+                        SoccerModel.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+                        SoccerModel.AssemblyAngularVelocity = Vector3.new(0, 9999, 0)
+                    elseif SoccerModel:IsA("Model") then
+                        SoccerModel:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0, 0, -3))
+                        SoccerModel.PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 9999, 0)
+                    end
+                end
+            end)
         end
-
-        FlingConnection = RunService.Heartbeat:Connect(function()
-            local p = Players:FindFirstChild(SelectedPlayer or "")
-            if not p then
-                Window:Dialog({
-                    Title = "Info",
-                    Content = "Player saiu do jogo",
-                    Buttons = {
-                        {
-                            Title = "OK",
-                            Callback = function()
-                                Options.FlingBallToggle:SetValue(false)
-                            end
-                        }
-                    }
-                })
-                FlingConnection:Disconnect()
-                return
-            end
-
-            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and SoccerModel and SoccerModel.PrimaryPart then
-                local hrp = p.Character.HumanoidRootPart
-                SoccerModel:SetPrimaryPartCFrame(CFrame.new(hrp.Position + hrp.CFrame.LookVector * 2))
-                SoccerModel.PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 9999, 0)
-            end
-        end)
     else
-        if FlingConnection then FlingConnection:Disconnect() end
+        if FlingConnection then
+            FlingConnection:Disconnect()
+            FlingConnection = nil
+        end
+        SoccerModel = nil
     end
 end)
+
+-- Fling Sofa Button (NOVO)
+Tabs.Main:AddButton({
+    Title = "Fling Sofa",
+    Description = "Clique para ativar o Fling Sofa",
+    Callback = function()
+        local targetPos = Vector3.new(-83, 20, -130)
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- Tween to target position
+            local tween = TweenService:Create(
+                hrp,
+                TweenInfo.new(5, Enum.EasingStyle.Linear),
+                {CFrame = CFrame.new(targetPos)}
+            )
+            tween:Play()
+            
+            tween.Completed:Wait()
+            Fluent:Notify({
+                Title = "Fling Sofa",
+                Content = "Sente no sofá",
+                Duration = 10
+            })
+            
+            task.wait(12)
+            
+            -- Check for Couch tool
+            local couchTool = LocalPlayer.Backpack:FindFirstChild("Couch") or LocalPlayer.Character:FindFirstChild("Couch")
+            if couchTool then
+                LocalPlayer.Character.Humanoid:EquipTool(couchTool)
+                
+                local targetPlayer = Players:FindFirstChild(SelectedPlayer)
+                if targetPlayer and targetPlayer.Character then
+                    couchConnection = RunService.Heartbeat:Connect(function()
+                        local targetHrp = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if targetHrp then
+                            hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, -3)
+                            hrp.AssemblyAngularVelocity = Vector3.new(0, 9999, 0)
+                            
+                            -- Check for animation or sitting
+                            local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+                            if humanoid and (humanoid.Sit or humanoid:GetState() == Enum.HumanoidStateType.Seated) then
+                                couchConnection:Disconnect()
+                                couchConnection = nil
+                                LocalPlayer.Character.Humanoid:UnequipTools()
+                            end
+                        end
+                    end)
+                end
+            end
+        end
+    end
+})
 
 Tabs.Main:AddParagraph({
     Title = "Info",
