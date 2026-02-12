@@ -6,9 +6,9 @@ local Window = Fluent:CreateWindow({
     Title = "XfireX HUB (BETA)",
     SubTitle = "by fiat",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(540, 440),
     Acrylic = true,
-    Theme = "Dark",
+    Theme = "Darker",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
