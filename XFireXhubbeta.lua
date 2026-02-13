@@ -1,132 +1,132 @@
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/FIAT258/interface-windui-new/main/wiinduinew.lua"))()
-local Window = WindUI:CreateWindow({
-    Title = "XFIREX HUB",
-    Icon = "door-open", -- lucide icon
-    Author = "by fiat",
-    Folder = "MySuperHub",
-    
-    -- ↓ This all is Optional. You can remove it.
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fire X Hub",
+    SubTitle = "by .ftgs",
+    TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    MinSize = Vector2.new(560, 350),
-    MaxSize = Vector2.new(850, 560),
-    Transparent = true,
+    Acrylic = true,
     Theme = "Dark",
-    Resizable = true,
-    SideBarWidth = 200,
-    BackgroundImageTransparency = 0.42,
-    HideSearchBar = true,
-    ScrollBarEnabled = false,
-    
-    
-    ---You can set 'rbxassetid://' or video to Background.
-        'rbxassetid://90396225447367':
-            Background = "rbxassetid://90396225447367", -- rbxassetid
-        Video:
-            Background = "video:YOUR-RAW-LINK-TO-VIDEO.webm", -- video 
-    --]]
-    
-    -- ↓ Optional. You can remove it.
-    User = {
-        Enabled = true,
-        Anonymous = true,
-        Callback = function()
-            print("clicked")
-        end,
-    },
-    
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    KeySystem = Window:AddTab({ Title = "Key System", Icon = "key" }),
+    Discord = Window:AddTab({ Title = "Discord", Icon = "message-circle" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local Options = Fluent.Options
+
+-- Função para verificar a key
+local function checkKey(key)
+    local validKey = "#fire#hubx130key18722--KEYwalfy"
+    return key == validKey
+end
 
 -- Tab Key System
-local KeyTab = Window:Tab({
-    Title = "Key System",
-    Icon = "key",
-})
+do
+    -- Input para a key
+    local KeyInput = Tabs.KeySystem:AddInput("KeyInput", {
+        Title = "Enter Key",
+        Default = "",
+        Placeholder = "Paste your key here...",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            -- Não fazemos nada aqui, usaremos o botão para verificar
+        end
+    })
 
--- Input para a key
-local KeyInput = KeyTab:Input({
-    Title = "Key Input",
-    Desc = "Digite sua key aqui",
-    Placeholder = "Cole sua key aqui...",
-    Type = "Input",
-})
-
--- Botão para verificar a key
-KeyTab:Button({
-    Title = "Check Key",
-    Desc = "Verifique se sua key é válida",
-    Callback = function()
-        local enteredKey = KeyInput.Value
-        local validKey = "#fire#hubx130key18722--KEYwalfy"
-        
-        if enteredKey == validKey then
-            WindUI:Notify({
-                Title = "Sucesso",
-                Content = "Key válida! Carregando hub...",
-                Duration = 3,
-                Icon = "check",
-            })
+    -- Botão para verificar a key
+    Tabs.KeySystem:AddButton({
+        Title = "Check Key",
+        Description = "Verify if your key is valid",
+        Callback = function()
+            local enteredKey = KeyInput.Value
             
-            -- Destruir a interface
-            Window:Destroy()
-            
-            -- Carregar os scripts
-            task.spawn(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/FIAT258/fiathub2/main/brookhavenxfirexhub.lua"))()
-            end)
+            if checkKey(enteredKey) then
+                Fluent:Notify({
+                    Title = "Success",
+                    Content = "Valid key! Loading hub...",
+                    Duration = 3
+                })
+                
+                -- Destruir a interface
+                Window:Destroy()
+                
+                -- Carregar os scripts
+                task.spawn(function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/FIAT258/fiathub2/main/brookhavenxfirexhub.lua"))()
+                end)
 
-            task.spawn(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/FIAT258/fiathub2/main/minimizarfirex.lua"))()
-            end)
-        else
-            WindUI:Notify({
-                Title = "Erro",
-                Content = "Clika get key e tenta pegar meu filho",
-                Duration = 3,
-                Icon = "x",
+                task.spawn(function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/FIAT258/fiathub2/main/minimizarfirex.lua"))()
+                end)
+            else
+                Fluent:Notify({
+                    Title = "Error",
+                    Content = "Click 'Get Key' and try again",
+                    Duration = 3
+                })
+            end
+        end
+    })
+
+    -- Botão para pegar key
+    Tabs.KeySystem:AddButton({
+        Title = "Get Key",
+        Description = "Copy the key link to clipboard",
+        Callback = function()
+            setclipboard("https://link-target.net/1460648/MU09RvRj3fCW")
+            Fluent:Notify({
+                Title = "Copied",
+                Content = "Key link copied to clipboard!",
+                Duration = 3
             })
         end
-    end
-})
+    })
 
--- Botão para pegar key
-KeyTab:Button({
-    Title = "Get Key",
-    Desc = "Clique para copiar o link da key",
-    Callback = function()
-        setclipboard("https://link-target.net/1460648/MU09RvRj3fCW")
-        WindUI:Notify({
-            Title = "Link copiado",
-            Content = "O link da key foi copiado para sua área de transferência!",
-            Duration = 3,
-            Icon = "copy",
-        })
-    end
-})
-
--- Aviso sobre salvar key
-KeyTab:Paragraph({
-    Title = "Aviso Importante",
-    Desc = "Salve sua key pois ela não fica salva automaticamente",
-    Color = "Red",
-    Icon = "alert-circle",
-})
+    -- Aviso sobre a key
+    Tabs.KeySystem:AddParagraph({
+        Title = "Important Notice",
+        Content = "Save your key as it won't be saved automatically"
+    })
+end
 
 -- Tab Discord
-local DiscordTab = Window:Tab({
-    Title = "Discord",
-    Icon = "message-circle",
-})
+do
+    -- Botão para pegar link do Discord
+    Tabs.Discord:AddButton({
+        Title = "Get Discord",
+        Description = "Copy the Discord invite link",
+        Callback = function()
+            setclipboard("https://discord.gg/ccBGAGU7yK")
+            Fluent:Notify({
+                Title = "Copied",
+                Content = "Discord link copied to clipboard!",
+                Duration = 3
+            })
+        end
+    })
+end
 
--- Botão para pegar link do Discord
-DiscordTab:Button({
-    Title = "Get Discord",
-    Desc = "Clique para copiar o link do nosso Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/ccBGAGU7yK")
-        WindUI:Notify({
-            Title = "Link copiado",
-            Content = "O link do Discord foi copiado para sua área de transferência!",
-            Duration = 3,
-            Icon = "copy",
-        })
-    end
+-- Configurações do SaveManager e InterfaceManager
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FireXHub")
+SaveManager:SetFolder("FireXHub/config")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+-- Selecionar a primeira aba e mostrar notificação
+Window:SelectTab(1)
+Fluent:Notify({
+    Title = "Fire X Hub",
+    Content = "Key system loaded successfully",
+    Duration = 5
 })
