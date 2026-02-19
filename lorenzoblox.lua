@@ -1,3 +1,27 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "test", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+
+Tab:AddBind({
+	Name = "Bind",
+	Default = Enum.KeyCode.E,
+	Hold = false,
+	Callback = function()
+		print("press")
+	end    
+})
+
+
+
+
+
+
+
+
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 local Update = (loadstring(game:HttpGet("https://roblox.relzscript.xyz/source/relzhub/library/pc.lua")))();
 local Alert = (loadstring(game:HttpGet("https://roblox.relzscript.xyz/source/relzhub/library/alert.lua")))();
 local Library = Update:Window("FIAT HUB (Blox Fruits)");
