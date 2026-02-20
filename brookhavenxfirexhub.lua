@@ -1,5 +1,5 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- Cria a janela principal
@@ -7,7 +7,7 @@ local Window = Fluent:CreateWindow({
     Title = "XfireX HUB (BETA)",
     SubTitle = "by fiat",
     TabWidth = 160,
-    Size = UDim2.fromOffset(450, 448),
+    Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -254,17 +254,18 @@ Tabs.Tools:AddButton({
     Title = "TP Tool",
     Description = "Cria uma ferramenta de teleporte",
     Callback = function()
-         local tool = Instance.new("Tool")
-    tool.RequiresHandle = false
-    tool.Name = "Teleport Tool"
-    tool.Parent = player.Backpack
-    tool.Activated:Connect(function()
-        local mouse = player:GetMouse()
-        if mouse.Hit then
-            player.Character:MoveTo(mouse.Hit.p + Vector3.new(0,3,0))
-        end
-    end)
-end
+        local Tool = Instance.new("Tool")
+        Tool.Name = "TP Tool"
+        Tool.Parent = LocalPlayer.Backpack
+
+        Tool.Activated:Connect(function()
+            local mouse = LocalPlayer:GetMouse()
+            if mouse.Hit then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = mouse.Hit
+            end
+        end)
+    end
+})
 
 -- Roubado Tab
 Tabs.Roubado:AddParagraph({
