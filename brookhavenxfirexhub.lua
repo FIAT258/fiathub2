@@ -1,5 +1,5 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- Cria a janela principal
@@ -7,7 +7,7 @@ local Window = Fluent:CreateWindow({
     Title = "XfireX HUB (BETA)",
     SubTitle = "by fiat",
     TabWidth = 160,
-    Size = UDim2.fromOffset(470, 465),
+    Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -206,10 +206,10 @@ Tabs.Main:AddButton({
                 couchConnection = RunService.Heartbeat:Connect(function()
                     local targetHrp = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
                     if targetHrp then
-                        -- Magnetismo: Segue o jogador selecionado
-                        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, -3)
+                        -- Magnetismo: Segue o jogador selecionado no tronco
+                        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 0)
                         
-                        -- Gira o jogador principal em todas as direções
+                        -- Gira o jogador principal em todas as direções no próprio eixo
                         hrp.AssemblyAngularVelocity = Vector3.new(99999, 99999, 99999)
                         
                         -- Verifica se o jogador fez animação ou sentou
