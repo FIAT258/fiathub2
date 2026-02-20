@@ -2,6 +2,7 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+-- Cria a janela principal
 local Window = Fluent:CreateWindow({
     Title = "XfireX HUB (BETA)",
     SubTitle = "by fiat",
@@ -598,3 +599,6 @@ Fluent:Notify({
     Duration = 5
 })
 SaveManager:LoadAutoloadConfig()
+
+-- Garante que a interface será exibida
+Window:Show()
